@@ -171,53 +171,94 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
               {isVerifying ? 'ĐANG XÁC MINH...' : 'XÁC MINH'}
             </button>
            {/* Thẻ thông tin Thí sinh - Khôi phục giao diện cũ */}
-{verifiedStudent && (
-  <div className="p-6 bg-white border-2 border-blue-50 rounded-[2rem] shadow-sm space-y-4 animate-fade-in relative overflow-hidden">
-    {/* Background icon trang trí ẩn dưới nền */}
-    <i className="fas fa-user-graduate absolute -right-4 -bottom-4 text-slate-50 text-7xl rotate-12"></i>
+    {verifiedStudent && (
+      <div className="p-5 bg-white border border-blue-100 rounded-[2rem] shadow-sm space-y-3 animate-fade-in relative overflow-hidden">
+        {/* Badge tích xanh ẩn dưới nền cho sang trọng */}
+        <i className="fas fa-check-circle absolute -right-4 -bottom-4 text-blue-50 text-7xl rotate-12"></i>
 
-    <div className="relative z-10">
-      {/* Tên học sinh */}
-      <h4 className="text-2xl font-black text-blue-900 uppercase mb-1 tracking-tight">
-        {verifiedStudent.name}
-      </h4>
-      
-      {/* Thông tin Lớp và SBD */}
-      <p className="text-slate-600 font-bold flex items-center gap-2">
-        <span className="bg-slate-100 px-2 py-0.5 rounded text-sm">Lớp: {verifiedStudent.class}</span>
-        <span className="text-slate-300">|</span>
-        <span className="bg-slate-100 px-2 py-0.5 rounded text-sm">SBD: {verifiedStudent.sbd}</span>
-      </p>
-
-      {/* Badge Tài khoản VIP */}
-      <div className="mt-4">
-        {isVip ? (
-          <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full shadow-sm border border-amber-200">
-            <i className="fas fa-crown text-xs"></i>
-            <span className="text-xs font-black uppercase tracking-wider">Tài khoản VIP</span>
+        {/* 1. Tên + Tích xanh */}
+        <div className="flex items-center gap-3 border-b border-slate-50 pb-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-md">
+            <i className="fas fa-user"></i>
           </div>
-        ) : (
-          <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full border border-slate-200">
-            <i className="fas fa-user-circle text-xs"></i>
-            <span className="text-xs font-black uppercase tracking-wider">Tài khoản Miễn phí</span>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* Thông số giới hạn - Hiển thị tinh tế phía dưới */}
-    <div className="grid grid-cols-2 gap-2 pt-2 relative z-10">
-      <div className="text-[10px] font-bold text-slate-400 uppercase">
-        Lượt thi: <span className="text-blue-600">{verifiedStudent.limit}</span>
-      </div>
-      <div className="text-[10px] font-bold text-slate-400 uppercase">
-        Tab giới hạn: <span className="text-blue-600">{verifiedStudent.limittab}</span>
-      </div>
-    </div>
-  </div>
-)}
+          <div className="flex flex-col truncate">
+            <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Thí sinh</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-blue-900 uppercase truncate">{verifiedStudent.name}</span>
+              <svg className="w-4 h-4 text-blue-500 fill-current" viewBox="0 0 20 20 shadow-sm"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+            </div>
           </div>
         </div>
+
+        {/* Danh sách thông tin dạng lưới 2 cột cho gọn */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Lớp */}
+          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
+            <i className="fas fa-graduation-cap text-indigo-500 text-xs"></i>
+            <span className="text-[11px] font-black text-slate-600">Lớp: {verifiedStudent.class}</span>
+          </div>
+          {/* SBD */}
+          <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100">
+            <i className="fas fa-hashtag text-pink-500 text-xs"></i>
+            <span className="text-[11px] font-black text-slate-600">SBD: {verifiedStudent.sbd}</span>
+          </div>
+          {/* Số lần thi */}
+          <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-xl border border-emerald-100">
+            <i className="fas fa-redo text-emerald-600 text-xs"></i>
+            <span className="text-[11px] font-black text-emerald-700">Max lần thi: {verifiedStudent.limit}</span>
+          </div>
+          {/* Số lần chuyển tab */}
+          <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-xl border border-orange-100">
+            <i className="fas fa-external-link-square-alt text-orange-600 text-xs"></i>
+            <span className="text-[11px] font-black text-orange-700">Max Tab: {verifiedStudent.limittab}</span>
+          </div>
+        </div>
+
+       {/* Tài khoản VIP / App */}
+<div className="pt-2 border-t border-slate-50">
+  <div className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isVip ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-slate-50 border-slate-100'}`}>
+    
+    {/* Vế trước: Chữ Tài khoản cố định */}
+    <div className="flex items-center gap-2">
+      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${isVip ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'}`}>
+        <i className={`fas ${isVip ? 'fa-gem' : 'fa-user-circle'} text-[10px]`}></i>
+      </div>
+      <span className={`text-[11px] font-black uppercase ${isVip ? 'text-amber-800' : 'text-slate-500'}`}>
+        Tài khoản:
+      </span>
+    </div>
+
+    {/* Vế sau: Trạng thái VIP óng ánh hoặc VIP0 */}
+    <div className="flex items-center">
+      {isVip ? (
+        // Hiển thị VIP 1 trở lên (Vàng óng ánh)
+        <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 px-3 py-1 rounded-full shadow-inner animate-pulse border border-amber-300">
+          <i className="fas fa-crown text-[10px] text-amber-900"></i>
+          <span className="text-[12px] font-black text-amber-900 drop-shadow-sm uppercase">
+            {verifiedStudent.taikhoanapp || "VIP1"}
+          </span>
+          {/* Tích xanh nhỏ cho VIP */}
+          <svg className="w-3 h-3 text-amber-800 fill-current" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+        </div>
+      ) : (
+        // Hiển thị VIP0 hoặc trống (Xám đơn giản)
+        <div className="flex items-center gap-1 bg-slate-200 px-3 py-1 rounded-full border border-slate-300">
+          <i className="fas fa-user text-[8px] text-slate-500"></i>
+          <span className="text-[11px] font-black text-slate-600 uppercase">
+            {verifiedStudent.taikhoanapp && verifiedStudent.taikhoanapp.trim() !== "" ? verifiedStudent.taikhoanapp : "VIP0"}
+          </span>
+        </div>
+      )}
+    </div>
+
+  </div>
+</div>
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Cột 2: Đề thi */}
         <div className="space-y-6">
