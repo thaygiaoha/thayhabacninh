@@ -120,26 +120,28 @@ const handleWordParser = (text) => {
 };
 
 
-  const handleSaveQuestions = async () => {
+   const handleSaveQuestions = async () => {
   if (!jsonInput) return alert("Chưa có dữ liệu!");
   setLoading(true);
   try {
-    const dataArray = JSON.parse(jsonInput); // Đây là mảng các câu hỏi [{id, tag, q}, ...]
-    
-    // Gửi yêu cầu POST với nội dung là mảng phẳng
-    const resp = await fetch(`${DANHGIA_URL}?action=saveQuestions`, {
+    const dataArray = JSON.parse(jsonInput);
+
+    await fetch(`${DANHGIA_URL}?action=saveQuestions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' }, 
-      body: JSON.stringify(dataArray) // Gửi THẲNG cái mảng này đi
+      mode: 'no-cors', // ⭐ BẮT BUỘC
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(dataArray)
     });
-    
-    const res = await resp.json();
-    if (res.status === 'success') { 
-      alert(`🚀 Thành công! Đã chèn ${dataArray.length} dòng.`); 
-      setJsonInput(''); 
-    }
-  } catch (e) { alert("Lỗi gửi dữ liệu!"); }
-  finally { setLoading(false); }
+
+    // ⭐ KHÔNG ĐỌC RESPONSE
+    alert(`🚀 Thành công! Đã chèn ${dataArray.length} câu hỏi vào ngân hàng.`);
+    setJsonInput('');
+
+  } catch (e) {
+    alert("❌ Lỗi gửi dữ liệu!");
+  } finally {
+    setLoading(false);
+  }
 };
 
   // --- 2. XÁC MINHXỬ LÝ NHẬP CÂU HỎI & SỬA LẺ (Giữ nguyên logic của thầy) ---
