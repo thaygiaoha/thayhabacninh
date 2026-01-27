@@ -146,7 +146,7 @@ const handleWordParser = (text) => {
 
   // --- 2. XÁC MINHXỬ LÝ NHẬP CÂU HỎI & SỬA LẺ (Giữ nguyên logic của thầy) ---
   const handleVerifyAdminOTP = () => {
-    if (otp === "123456" || otp === "686868") setIsAdminVerified(true);
+    if (otp === "123456" || otp === "6688") setIsAdminVerified(true);
     else alert("Mã OTP sai!");
   };
   if (!isAdminVerified) {
