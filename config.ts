@@ -1,6 +1,6 @@
 
 import { Topic, ExamCodeDefinition, NewsItem, FixedConfig } from './types';
-export const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwZdb9kvZk6acp9aVkZBvsV-4hXpnQOdHYzOS1jHFmvwPsYcjXz7IDBQ8xuF_PgB3Bkkg/exec";
+export const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyeRfOehuGo0NegH5HQvhep1lyHPuKMEErn4QMW_ycmyDw0mjAzUvlM9tDejcOnIg6q/exec";
 export const DANHGIA_URL = DEFAULT_API_URL;
 // Khởi tạo rỗng, chúng ta sẽ lấp đầy nó sau khi App chạy
 export let API_ROUTING: Record<string, string> = {};
