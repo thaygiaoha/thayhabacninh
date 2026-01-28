@@ -182,7 +182,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
             <i className="fas fa-user"></i>
           </div>
           <div className="flex flex-col truncate">
-            <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Thí sinh</span>
+            <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Chào mừng thí sinh</span>
             <div className="flex items-center gap-1.5">
               <span className="font-black text-blue-900 uppercase truncate">{verifiedStudent.name}</span>
               <svg className="w-4 h-4 text-blue-500 fill-current" viewBox="0 0 20 20 shadow-sm"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
