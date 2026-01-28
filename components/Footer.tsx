@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-8">
           <div className="text-center md:text-left">
             <h2 className="text-2xl font-bold text-white mb-2">THẦY HÀ - BẮC NINH</h2>
-            <p className="text-gray-400">Giáo viên trường THPT Yên Dũng số 2 - P. Tân An - T. Bắc Ninh</p>
+            <p className="text-gray-400">Đồng hành cùng các em trên con đường chinh phục tri thức.</p>
           </div>
 
           <div className="flex flex-col items-center md:items-end gap-4">
@@ -23,9 +23,6 @@ const Footer: React.FC = () => {
             </button>
             
             <div className="flex items-center gap-4">
-               <a href="https://www.youtube.com/@hatgiongtinhthuctrongban" target="_blank" rel="noreferrer" className="bg-white/5 p-3 rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-lg">
-                <Facebook size={20} />
-              </a>
               <a href="https://www.facebook.com/hoctoanthayha.bg" target="_blank" rel="noreferrer" className="bg-white/5 p-3 rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-lg">
                 <Facebook size={20} />
               </a>

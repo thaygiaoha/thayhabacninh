@@ -163,7 +163,31 @@ const handleWordParser = (text) => {
   } catch (e) { alert("Lỗi gửi dữ liệu!"); }
   finally { setLoading(false); }
 };
- 
+  const handleSearchLG = async (id) => {
+  if (!id) return alert("Không tìm thấy ID câu hỏi!");
+  
+  setLoadingLG(true);
+  try {
+    // Thêm redirect 'follow' để vượt rào Google
+    const response = await fetch(`${DANHGIA_URL}?action=getLG&id=${id}`, {
+      method: 'GET',
+      redirect: 'follow' 
+    });
+    
+    const text = await response.text();
+    
+    // Regex chuẩn để bóc tách nội dung giữa dấu nháy của loigiai
+    const match = text.match(/loigiai\s*:\s*["']([\s\S]*)["']/);
+    const finalContent = match ? match[1] : text;
+
+    setLoiGiaiTraCuu(finalContent.trim());
+  } catch (error) {
+    console.error("Lỗi tra cứu LG:", error);
+    alert("Lỗi kết nối Server!");
+  } finally {
+    setLoadingLG(false);
+  }
+};
 // Up lG
 const handleUploadLG = async () => {
   if (!jsonInput.trim()) return alert("Dán nội dung vào đã thầy ơi!");

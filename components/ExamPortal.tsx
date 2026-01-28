@@ -171,7 +171,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
               {isVerifying ? 'ĐANG XÁC MINH...' : 'XÁC MINH'}
             </button>
            {/* Thẻ thông tin Thí sinh - Khôi phục giao diện cũ */}
-    {verifiedStudent && (
+{verifiedStudent && (
       <div className="p-5 bg-white border border-blue-100 rounded-[2rem] shadow-sm space-y-3 animate-fade-in relative overflow-hidden">
         {/* Badge tích xanh ẩn dưới nền cho sang trọng */}
         <i className="fas fa-check-circle absolute -right-4 -bottom-4 text-blue-50 text-7xl rotate-12"></i>
@@ -260,66 +260,32 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
   </div>
 </div>
 
-         {/* Cột 2: Chọn mã đề */}
-<div className="space-y-6">
-  <h3 className="text-xl font-black text-slate-800 uppercase flex items-center gap-2 border-l-8 border-blue-600 pl-4">Đề Thi</h3>
-  <div className="space-y-4">
-    <div className="relative">
-      <select className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-3xl font-black text-blue-800 focus:ring-4 focus:ring-blue-100 shadow-sm outline-none appearance-none" value={selectedCode} onChange={e => setSelectedCode(e.target.value)}>
-        <option value="">-- CHỌN MÃ ĐỀ --</option>
-        {allAvailableCodes.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-      </select>
-      <i className="fas fa-chevron-down absolute right-6 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none"></i>
-    </div>
-    
-    {currentCodeDef?.fixedConfig && (
-      <div className="p-6 bg-blue-50 border border-blue-100 rounded-[2.5rem] shadow-inner space-y-4 text-center animate-fade-in">
-        <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Cấu hình đề thi</p>
-        
-        {/* Hàng 1: Thời gian và Tổng số câu */}
-        <div className="flex justify-center gap-4">
-          <div className="bg-white px-5 py-3 rounded-2xl shadow-sm border border-blue-100 flex-1">
-            <p className="text-2xl font-black text-blue-700">{currentCodeDef.fixedConfig.duration}</p>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Phút làm bài</p>
-          </div>
-          <div className="bg-white px-5 py-3 rounded-2xl shadow-sm border border-blue-100 flex-1">
-            <p className="text-2xl font-black text-blue-700">
-              {(currentCodeDef.fixedConfig.numMC?.reduce((a, b) => a + b, 0) || 0) + 
-               (currentCodeDef.fixedConfig.numTF?.reduce((a, b) => a + b, 0) || 0) + 
-               (currentCodeDef.fixedConfig.numSA?.reduce((a, b) => a + b, 0) || 0)}
-            </p>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Tổng số câu</p>
-          </div>
-        </div>
-
-        {/* Hàng 2: Chi tiết từng loại câu hỏi - KHÔI PHỤC TẠI ĐÂY */}
-        <div className="pt-2">
-          <div className="bg-white/60 p-3 rounded-2xl border border-blue-100">
-            <div className="grid grid-cols-3 divide-x divide-blue-100">
-              <div>
-                <p className="text-sm font-black text-blue-800">{currentCodeDef.fixedConfig.numMC?.reduce((a, b) => a + b, 0) || 0}</p>
-                <p className="text-[8px] font-bold text-slate-500 uppercase">Trắc nghiệm</p>
-              </div>
-              <div>
-                <p className="text-sm font-black text-indigo-800">{currentCodeDef.fixedConfig.numTF?.reduce((a, b) => a + b, 0) || 0}</p>
-                <p className="text-[8px] font-bold text-slate-500 uppercase">Đúng/Sai</p>
-              </div>
-              <div>
-                <p className="text-sm font-black text-emerald-800">{currentCodeDef.fixedConfig.numSA?.reduce((a, b) => a + b, 0) || 0}</p>
-                <p className="text-[8px] font-bold text-slate-500 uppercase">T.Lời Ngắn</p>
+        {/* Cột 2: Đề thi */}
+        <div className="space-y-6">
+          <h3 className="text-xl font-black border-l-8 border-blue-600 pl-4 uppercase">Đề thi</h3>
+          <select className="w-full p-5 bg-slate-50 border-2 rounded-3xl font-black text-blue-800 outline-none" value={selectedCode} onChange={e => setSelectedCode(e.target.value)}>
+            <option value="">-- CHỌN MÃ ĐỀ --</option>
+            {allAvailableCodes.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+          </select>
+          {currentCodeDef?.fixedConfig && (
+            <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 text-center space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white p-3 rounded-xl shadow-sm">
+                  <span className="block text-xl font-black text-blue-700">{currentCodeDef.fixedConfig.duration}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Phút</span>
+                </div>
+                <div className="bg-white p-3 rounded-xl shadow-sm">
+                  <span className="block text-xl font-black text-blue-700">
+                    {(currentCodeDef.fixedConfig.numMC?.reduce((a, b) => a + b, 0) || 0) + 
+                     (currentCodeDef.fixedConfig.numTF?.reduce((a, b) => a + b, 0) || 0) + 
+                     (currentCodeDef.fixedConfig.numSA?.reduce((a, b) => a + b, 0) || 0)}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Câu hỏi</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-
-        {/* Thông tin điểm số (Tùy chọn) */}
-        <p className="text-[9px] font-bold text-blue-400 italic">
-          * Ma trận đề thầy cô có thể tạo theo ý muốn khi đăng ký app.
-        </p>
-      </div>
-    )}
-  </div>
-</div>
 
         {/* Cột 3: Chuyên đề */}
         <div className="space-y-6">

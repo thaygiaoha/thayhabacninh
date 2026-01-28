@@ -45,6 +45,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [isMatrixOpen, setIsMatrixOpen] = useState(false); // Đóng/mở bảng ma trận
   const [loadingMatrix, setLoadingMatrix] = useState(false); //
   const [idgv, setIdgv] = useState('');
+ 
+  const [searchId, setSearchId] = useState('');
+  const [foundLG, setFoundLG] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+
+const [loadingLG, setLoadingLG] = useState(false); // Để hiện trạng thái đang tìm
   const toArray = (v: any) => {
   if (Array.isArray(v)) return v;
   if (!v) return [];
@@ -90,6 +97,11 @@ const [dynamicLevels, setDynamicLevels] = useState<string[]>([]); // Danh sách 
   // ảnh và tin tức
   const [carouselImages, setCarouselImages] = useState<string[]>([]);
 const [newsList, setNewsList] = useState<{t: string, l: string}[]>([]);
+  useEffect(() => {
+  if (window.MathJax && foundLG) {
+    window.MathJax.typesetPromise();
+  }
+}, [foundLG]);
   useEffect(() => {
   const fetchContentData = async () => {
     try {
@@ -169,6 +181,28 @@ const handleSaveMatrix = async () => {
   } catch (e) {
     console.error(e);
     alert("❌ Lỗi kết nối! Dữ liệu có thể đã ghi nhưng không nhận được phản hồi.");
+  }
+};
+  // Tìm câu hỏi
+const handleSearchLG = async () => {
+  if (!searchId) return alert("Nhập mã ID đã thầy ơi!");
+  setLoadingLG(true);
+  try {
+    const response = await fetch(`${DANHGIA_URL}?action=getLG&id=${searchId}`);
+    const text = await response.text();
+    
+    // Tìm phần nội dung sau "a:" và bóc tách nó ra khỏi dấu ngoặc kép
+    const match = text.match(/a\s*:\s*["']([\s\S]*)["']\s*}/) || text.match(/loigiai\s*:\s*["']([\s\S]*)["']/);
+    
+    if (match && match[1]) {
+      setFoundLG(match[1].trim()); // Chỉ lấy nội dung thuần túy
+    } else {
+      setFoundLG(text.replace(/["'{}]/g, "").trim()); // Nếu không khớp, xóa hết ký tự rác
+    }
+  } catch (error) {
+    setFoundLG("Lỗi kết nối máy chủ!");
+  } finally {
+    setLoadingLG(false);
   }
 };
 const handleAuth = async (e: React.FormEvent) => {
@@ -613,13 +647,28 @@ const handleRedirect = () => {
             <button className="w-full bg-blue-500 text-white p-4 rounded-2xl font-black text-xs uppercase shadow-lg border-b-4 border-blue-800 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2">
               <i className="fas fa-gamepad animate-bounce"></i> Làm bài kiểm tra
             </button>
-            <div className="grid grid-cols-2 gap-2">
-              {[9, 10, 11, 12].map(g => (
-                <button key={g} onClick={() => onSelectGrade(g)} className="bg-blue-600 text-white p-2.5 rounded-xl font-black text-[10px] uppercase border-b-4 border-blue-800 transition-all active:scale-95 flex items-center justify-center gap-2">
-                  <i className="fas fa-graduation-cap text-[10px]"></i> <span>Lớp {g}</span>
-                </button>
-              ))}
-            </div>
+           <div className="grid grid-cols-2 gap-2">
+  {/* 3 Nút chọn lớp 10, 11, 12 */}
+  {[10, 11, 12].map(g => (
+    <button 
+      key={g} 
+      onClick={() => onSelectGrade(g)} 
+      className="bg-blue-600 text-white p-2.5 rounded-xl font-black text-[10px] uppercase border-b-4 border-blue-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+    >
+      <i className="fas fa-graduation-cap text-[10px]"></i> 
+      <span>Lớp {g}</span>
+    </button>
+  ))}
+
+  {/* Nút Lời giải - Ngang hàng và bằng kích thước */}
+  <button 
+    onClick={() => setShowModal(true)}
+    className="bg-orange-500 text-white p-2.5 rounded-xl font-black text-[10px] uppercase border-b-4 border-orange-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+  >
+    <i className="fas fa-search text-[10px]"></i> 
+    <span>Lời giải</span>
+  </button>
+</div>
 
             {/* QUẢN TRỊ */}
             <div className="mt-4 pt-6 border-t border-slate-100 flex flex-col gap-3 w-full">
@@ -1164,6 +1213,65 @@ const handleRedirect = () => {
           </div>
         </div>
       )}
+      {/* GIAO DIỆN BẢNG TÌM LỜI GIẢI */}
+        {showModal && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[999] p-4">
+    <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+      
+      {/* Header Cam Rực Rỡ */}
+      <div className="bg-orange-500 p-8 text-white flex justify-between items-center border-b-8 border-orange-600">
+        <h3 className="text-2xl font-black uppercase tracking-widest flex items-center gap-3">
+          <i className="fa-solid fa-lightbulb text-3xl"></i> Lời giải chi tiết
+        </h3>
+        <button onClick={() => {setShowModal(false); setFoundLG(null); setSearchId("");}} className="hover:rotate-90 transition-all bg-white/20 p-2 rounded-full">
+          <i className="fa-solid fa-xmark text-3xl"></i>
+        </button>
+      </div>
+
+      <div className="p-8 md:p-12">
+        {/* Ô nhập ID */}
+        <div className="flex gap-4 mb-10">
+          <input 
+            type="text" 
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearchLG()}
+            placeholder="Nhập mã ID (VD: 12260128001)..."
+            className="flex-1 border-4 border-slate-100 rounded-3xl px-8 py-5 focus:border-orange-500 outline-none font-black text-2xl text-slate-700 shadow-inner"
+          />
+          <button 
+            onClick={handleSearchLG} 
+            className="bg-orange-500 hover:bg-orange-600 text-white px-10 rounded-3xl font-black text-xl shadow-lg transition-all active:scale-95"
+          >
+            {loadingLG ? <i className="fa-solid fa-spinner animate-spin"></i> : "TÌM KIẾM"}
+          </button>
+        </div>
+
+        {/* Vùng hiển thị Lời giải thuần túy */}
+        {foundLG ? (
+          <div className="bg-orange-50/50 p-10 rounded-[2.5rem] border-2 border-orange-100 min-h-[350px] max-h-[60vh] overflow-y-auto">
+            <div id="modal-lg-content" className="text-2xl leading-relaxed text-slate-800 font-medium">
+               <p className="whitespace-pre-wrap italic">
+                  {foundLG}
+               </p>
+            </div>
+          </div>
+        ) : (
+          <div className="py-20 text-center text-slate-200">
+            <i className="fa-solid fa-face-smile text-8xl mb-4 opacity-10"></i>
+            <p className="text-xl font-bold italic">Mời thầy nhập mã ID để xem hướng dẫn giải!</p>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-slate-50 p-4 text-center">
+         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Hỗ trợ MathJax & Render sạch nội dung</p>
+      </div>
+    </div>
+  </div>
+)}
+{/* GIAO DIỆN TRA CỨU LỜI GIẢI - BẢN FULL KHÔNG THIẾU THỨ GÌ */}
+
       {/* ICON FONTAWESOME */}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
