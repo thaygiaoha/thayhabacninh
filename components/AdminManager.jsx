@@ -253,7 +253,29 @@ const handleUploadLG = async () => {
 >
   <i className="fa-solid fa-lightbulb"></i> Import LG
 </button>
+{/* Nút Tìm câu trùng */}
+<button 
+  onClick={() => setCurrentTab('duplicate')} 
+  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase transition-all ${
+    currentTab === 'duplicate' 
+    ? 'bg-purple-600 text-white shadow-lg shadow-purple-200 scale-105' 
+    : 'text-slate-500 hover:bg-slate-100'
+  }`}
+>
+  <i className="fa-solid fa-clone"></i> Tìm câu trùng
+</button>
 
+{/* Nút Xóa câu hỏi */}
+<button 
+  onClick={() => setCurrentTab('delete')} 
+  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase transition-all ${
+    currentTab === 'delete' 
+    ? 'bg-red-600 text-white shadow-lg shadow-red-200 scale-105' 
+    : 'text-slate-500 hover:bg-slate-100'
+  }`}
+>
+  <i className="fa-solid fa-trash-can"></i> Xóa câu hỏi
+</button>
   {/* Vạch ngăn cách tinh tế */}
   <div className="w-[1px] h-6 bg-slate-300 mx-2"></div>
 
