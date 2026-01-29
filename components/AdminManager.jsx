@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { DANHGIA_URL } from '../config';
+import { questionsBank } from '../questions'; // Hoặc đường dẫn file questions của thầy
 
 const AdminPanel = ({ mode, onBack }) => {
  
   // Thêm 'duplicate' và 'delete' vào kiểu dữ liệu của useState
-const [currentTab, setCurrentTab] = useState<'word' | 'lg' | 'duplicate' | 'delete'>('word');
+const [currentTab, setCurrentTab] = useState('cauhoi');
   const [loadingMatrix, setLoadingMatrix] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isAdminVerified, setIsAdminVerified] = useState(false);
@@ -239,7 +240,13 @@ const handleUploadLG = async () => {
   }
   return groups;
 };
- const handleDeepScan = () => {
+const handleDeepScan = () => {
+  // Kiểm tra nếu bank chưa có dữ liệu
+  if (!questionsBank || questionsBank.length === 0) {
+    alert("Dữ liệu đang được tải hoặc ngân hàng trống. Thầy đợi tí nhé!");
+    return;
+  }
+  
   const bank = questionsBank;
   const groups = [];
   const processed = new Set();
