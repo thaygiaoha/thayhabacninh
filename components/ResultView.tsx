@@ -184,7 +184,7 @@ React.useEffect(() => {
             <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border-2 border-blue-100 border-dashed relative">
             {/* Nhãn nhỏ xinh xắn ở góc */}
             <div className="absolute -top-3 left-6 px-3 py-1 bg-blue-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest shadow-md">
-            Lời giải chi tiết
+            Lời giải chi tiết(Xuất bản bởi: Nguyễn Văn Hà - Bắc Ninh)
           </div>
     
           <div className="text-slate-700 leading-relaxed pt-2">
