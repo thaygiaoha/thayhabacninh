@@ -14,6 +14,13 @@ const [currentTab, setCurrentTab] = useState<'word' | 'lg' | 'duplicate' | 'dele
  
   const [jsonInput, setJsonInput] = useState('');
   const [subjects, setSubjects] = useState([]); // Khai báo này để chứa môn học
+ const normalizeText = (text: string) => {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '') // Xóa khoảng trắng
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "") // Xóa dấu câu
+    .trim();
+};
   useEffect(() => {
   // Hàm này sẽ chạy ngay khi thầy mở trang Admin
   const loadConfig = async () => {
