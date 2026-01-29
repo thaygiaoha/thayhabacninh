@@ -160,18 +160,23 @@ React.useEffect(() => {
   </div>
 )}
             {/* 4. Tổng kết đáp án (Dành cho Trắc nghiệm và Trả lời ngắn) */}
-            {q.type !== 'true-false' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phương án đã chọn</p>
-                  <div className={`text-lg font-black ${isCorrect ? 'text-emerald-600' : 'text-red-600'}`}>{u || "Không trả lời"}</div>
-                </div>
-                <div className="md:border-l md:pl-6 border-slate-200">
-                  <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Đáp án đúng</p>
-                  <div className="text-lg font-black text-emerald-700">{q.a}</div>
-                </div>
-              </div>
-            )}
+{q.type !== 'true-false' && (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+    <div>
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phương án đã chọn</p>
+      {/* SỬA TẠI ĐÂY: Bọc u vào MathText */}
+      <div className={`text-lg font-black ${isCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
+        <MathText content={u?.toString() || "Không trả lời"} />
+      </div>
+    </div>
+    <div className="md:border-l md:pl-6 border-slate-200">
+      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Đáp án đúng</p>
+      <div className="text-lg font-black text-emerald-700">
+        <MathText content={q.a?.toString() || ""} />
+      </div>
+    </div>
+  </div>
+)}
 
             {/* 5. Giải thích chi tiết */}
           
