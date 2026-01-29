@@ -14,11 +14,12 @@ const [currentTab, setCurrentTab] = useState<'word' | 'lg' | 'duplicate' | 'dele
  
   const [jsonInput, setJsonInput] = useState('');
   const [subjects, setSubjects] = useState([]); // Khai báo này để chứa môn học
- const normalizeText = (text: string) => {
+ // Bỏ cái ": string" đi là xong thầy nhé
+const normalizeText = (text) => {
   return text
     .toLowerCase()
-    .replace(/\s+/g, '') // Xóa khoảng trắng
-    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "") // Xóa dấu câu
+    .replace(/\s+/g, '') 
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "") 
     .trim();
 };
   useEffect(() => {
