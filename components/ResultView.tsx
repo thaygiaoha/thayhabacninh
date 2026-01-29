@@ -138,7 +138,7 @@ React.useEffect(() => {
             <span className="font-black text-blue-600">{label}.</span>
             {/* SỬA TẠI ĐÂY: item.q -> item.text */}
             <div className="text-slate-700 font-medium">
-              <MathText content={item.text} /> 
+              <MathText content={item.text || item.q || ""} />
             </div>
           </div>
 
