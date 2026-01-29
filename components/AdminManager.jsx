@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { DANHGIA_URL } from '../config';
 
 const AdminPanel = ({ mode, onBack }) => {
-  const [currentTab, setCurrentTab] = useState(mode || 'cauhoi');
+ 
+  // Thêm 'duplicate' và 'delete' vào kiểu dữ liệu của useState
+const [currentTab, setCurrentTab] = useState<'word' | 'lg' | 'duplicate' | 'delete'>('word');
   const [loadingMatrix, setLoadingMatrix] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isAdminVerified, setIsAdminVerified] = useState(false);
@@ -197,6 +199,37 @@ const handleUploadLG = async () => {
     setJsonInput('');
   } catch (e) { alert("Lỗi gửi dữ liệu thầy ạ!"); }
   finally { setLoading(false); }
+};
+
+  // Tìm câu trùng
+  const handleFindDuplicates = () => {
+  const groups = []; // Chứa các nhóm câu trùng
+  const bank = questionsBank;
+  const processed = new Set();
+
+  for (let i = 0; i < bank.length; i++) {
+    if (processed.has(bank[i].id)) continue;
+    let currentGroup = [bank[i]];
+
+    for (let j = i + 1; j < bank.length; j++) {
+      const q1 = bank[i];
+      const q2 = bank[j];
+
+      // Tiêu chuẩn "Mềm" của thầy:
+      const sameAnswer = q1.loigiai === q2.loigiai; // Nếu thầy lưu đáp án trong loigiai
+      const similarContent = checkTextSimilarity(q1.question, q2.question) > 0.9;
+
+      if (sameAnswer || similarContent) {
+        currentGroup.push(q2);
+        processed.add(q2.id);
+      }
+    }
+    if (currentGroup.length > 1) {
+      groups.push(currentGroup);
+      processed.add(bank[i].id);
+    }
+  }
+  return groups;
 };
 
   // --- 2. XÁC MINHXỬ LÝ NHẬP CÂU HỎI & SỬA LẺ (Giữ nguyên logic của thầy) ---
@@ -424,6 +457,46 @@ const handleUploadLG = async () => {
         {loiGiaiTraCuu && (
   <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 my-2 whitespace-pre-wrap">
     <strong>Lời giải:</strong> {loiGiaiTraCuu}
+  </div>
+)}
+        {/* TAB 4: XÓA CÂU HỎI */}
+        {currentTab === 'delete' && (
+  <div className="p-8 bg-white rounded-[2.5rem] border-2 border-red-50 shadow-xl animate-fade-in">
+    <div className="flex items-center gap-4 mb-6">
+      <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center">
+        <i className="fa-solid fa-eraser text-xl"></i>
+      </div>
+      <div>
+        <h3 className="text-xl font-black text-slate-800 uppercase">Xóa câu hỏi hàng loạt</h3>
+        <p className="text-xs text-slate-400 font-bold">Nhập các ID cách nhau bởi dấu phẩy</p>
+      </div>
+    </div>
+
+    <textarea 
+      id="batchDeleteInput"
+      placeholder="Ví dụ: 601.1, 1002.4, 1205.2" 
+      className="w-full p-5 bg-slate-50 rounded-3xl border-2 border-slate-100 outline-none font-black text-red-600 focus:border-red-200 transition-all mb-4 h-32"
+    />
+
+    <button 
+      onClick={async () => {
+        const input = document.getElementById('batchDeleteInput').value;
+        if(!input) return alert("Vui lòng nhập ít nhất một ID!");
+        
+        if(confirm(`Bạn có chắc chắn muốn xóa các câu: ${input}?`)) {
+          const url = `${DANHGIA_URL}?action=deleteMultiple&ids=${encodeURIComponent(input)}`;
+          const resp = await fetch(url);
+          const res = await resp.json();
+          if(res.status === "success") {
+            alert(`Thành công! Đã xóa ${res.deletedCount} câu hỏi.`);
+            document.getElementById('batchDeleteInput').value = '';
+          }
+        }
+      }}
+      className="w-full py-5 bg-red-600 text-white rounded-2xl font-black uppercase shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center gap-3"
+    >
+      <i className="fa-solid fa-trash-arrow-up"></i> Xác nhận xóa vĩnh viễn
+    </button>
   </div>
 )}
       </div>
