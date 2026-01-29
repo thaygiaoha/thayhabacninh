@@ -24,6 +24,21 @@ React.useEffect(() => {
 }, [showReview]);
 
   const btnStyle = "w-full sm:w-64 py-4 bg-blue-600 text-white rounded-full font-black text-lg hover:bg-blue-700 transition shadow-xl flex items-center justify-center gap-3 active:scale-95 border-b-4 border-blue-800";
+  const extractLoigiai = (lg?: string) => {
+  if (!lg) return "";
+
+  // Nếu là JSON object dạng chuỗi
+  if (lg.includes("loigiai")) {
+    const match = lg.match(/loigiai\s*:\s*"(.*)"\s*}/);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  // Mặc định: coi như text thuần
+  return lg;
+};
+
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-20 font-sans">
@@ -188,7 +203,8 @@ React.useEffect(() => {
           </div>
     
           <div className="text-slate-700 leading-relaxed pt-2">
-          <MathText content={q.loigiai} />
+          <MathText content={extractLoigiai(q.loigiai)} />
+
     </div>
   </div>
 )}
