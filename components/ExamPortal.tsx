@@ -123,28 +123,64 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
     finally { setIsVerifying(false); }
   };
 
-  const handleStart = () => {
-    if (!verifiedStudent || !selectedCode) return alert("Chưa chọn mã đề hoặc chưa xác minh!");
+ const handleStart = () => {
+    // 1. Kiểm tra điều kiện bắt đầu
+    if (!verifiedStudent || !selectedCode) {
+      return alert("Vui lòng xác minh thí sinh và chọn mã đề!");
+    }
+    
     const fc = currentCodeDef?.fixedConfig;
     if (!fc) return alert("Cấu hình đề thi bị lỗi!");
 
+    // 2. Thiết lập cấu hình bài thi
     const finalConfig = { 
-      id: selectedCode, title: currentCodeDef.name, time: fc.duration, 
-      mcqPoints: fc.scoreMC, tfPoints: fc.scoreTF, saPoints: fc.scoreSA, 
+      id: selectedCode, 
+      title: currentCodeDef.name, 
+      time: fc.duration, 
+      mcqPoints: fc.scoreMC, 
+      tfPoints: fc.scoreTF, 
+      saPoints: fc.scoreSA, 
       gradingScheme: 1 
     };
 
-    const topicsToPick = currentCodeDef.topics === 'manual' ? selectedTopics : (currentCodeDef.topics as string[]);
-    if (!topicsToPick || topicsToPick.length === 0) return alert("Hãy chọn phạm vi kiến thức!");
+    // 3. Xác định danh sách chuyên đề cần lấy
+    const topicsToPick = currentCodeDef.topics === 'manual' 
+      ? selectedTopics 
+      : (currentCodeDef.topics as string[]);
 
-    const examQuestions = pickQuestionsSmart(
+    if (topicsToPick.length === 0) {
+      return alert("Vui lòng chọn phạm vi chuyên đề!");
+    }
+
+    // 4. Lấy câu hỏi từ ngân hàng thông qua pickQuestionsSmart
+    // Lưu ý: Đảm bảo pickQuestionsSmart của thầy trả về object có kèm field 'loigiai'
+    const questions = pickQuestionsSmart(
       topicsToPick, 
-      { mc: resolveCounts(fc.numMC, topicsToPick), tf: resolveCounts(fc.numTF, topicsToPick), sa: resolveCounts(fc.numSA, topicsToPick) }, 
-      { mc3: resolveCounts(fc.mcL3, topicsToPick), mc4: resolveCounts(fc.mcL4, topicsToPick), tf3: resolveCounts(fc.tfL3, topicsToPick), tf4: resolveCounts(fc.tfL4, topicsToPick), sa3: resolveCounts(fc.saL3, topicsToPick), sa4: resolveCounts(fc.saL4, topicsToPick) }
+      { 
+        mc: resolveCounts(fc.numMC, topicsToPick), 
+        tf: resolveCounts(fc.numTF, topicsToPick), 
+        sa: resolveCounts(fc.numSA, topicsToPick) 
+      }, 
+      { 
+        mc3: resolveCounts(fc.mcL3, topicsToPick), 
+        mc4: resolveCounts(fc.mcL4, topicsToPick), 
+        tf3: resolveCounts(fc.tfL3, topicsToPick), 
+        tf4: resolveCounts(fc.tfL4, topicsToPick), 
+        sa3: resolveCounts(fc.saL3, topicsToPick), 
+        sa4: resolveCounts(fc.saL4, topicsToPick) 
+      }
     );
 
-    if (examQuestions.length === 0) return alert("Ngân hàng đề hiện chưa đủ câu hỏi!");
-    onStart(finalConfig, verifiedStudent, examQuestions);
+    // 5. Kiểm tra số lượng câu hỏi thực tế lấy được
+    if (questions.length === 0) {
+      return alert("Ngân hàng đề hiện chưa đủ câu hỏi cho cấu hình này!");
+    }
+
+    // 6. LOG KIỂM TRA (Thầy F12 xem câu đầu tiên có loigiai chưa)
+    console.log("🚀 Bắt đầu thi. Câu hỏi mẫu:", questions[0]);
+
+    // 7. Chuyển trạng thái sang màn hình làm bài
+    onStart(finalConfig, verifiedStudent, questions);
   };
 
   const isVip = verifiedStudent?.taikhoanapp?.toUpperCase().includes("VIP");
