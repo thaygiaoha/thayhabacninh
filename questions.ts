@@ -86,14 +86,23 @@ export const pickQuestionsSmart = (
   });
 
   // Trộn đáp án trước khi xuất xưởng
+ // Trộn đáp án và đảm bảo dữ liệu lời giải được truyền đi
   return [...selectedPart1, ...selectedPart2, ...selectedPart3].map(q => {
+    // Copy toàn bộ dữ liệu câu hỏi (bao gồm cả field loigiai/loiGiai nếu có)
     const newQ = { ...q };
+
+    // Ưu tiên chuẩn hóa field loigiai để ResultView.tsx dễ đọc
+    // Nếu trong Database thầy đặt tên là loiGiai hoặc item[4] thì nó sẽ được gán vào newQ.loigiai
+    newQ.loigiai = q.loigiai || (q as any).loiGiai || (q as any).explanation || "";
+
     if (newQ.o && newQ.type === 'mcq') {
       newQ.shuffledOptions = shuffleArray(newQ.o);
     }
+    
     if (newQ.s && newQ.type === 'true-false') {
       newQ.s = shuffleArray(newQ.s);
     }
+
     return newQ;
   });
 };
