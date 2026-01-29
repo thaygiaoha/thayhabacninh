@@ -238,6 +238,58 @@ const handleUploadLG = async () => {
   }
   return groups;
 };
+ const handleDeepScan = () => {
+  const bank = questionsBank;
+  const groups = [];
+  const processed = new Set();
+  const resultDiv = document.getElementById('duplicateResult');
+  resultDiv.innerHTML = ''; // Xóa kết quả cũ
+
+  for (let i = 0; i < bank.length; i++) {
+    if (processed.has(bank[i].id)) continue;
+    let group = [bank[i]];
+
+    for (let j = i + 1; j < bank.length; j++) {
+      const q1 = bank[i];
+      const q2 = bank[j];
+
+      // TIÊU CHUẨN THẦY ĐẶT RA:
+      const isSameAnswer = q1.loigiai === q2.loigiai && q1.loigiai !== "";
+      // So sánh nội dung (loại bỏ khoảng trắng, dấu để so sánh chính xác)
+      const content1 = q1.question.replace(/\s+/g, '').toLowerCase();
+      const content2 = q2.question.replace(/\s+/g, '').toLowerCase();
+      const isSimilar = content1 === content2;
+
+      if (isSameAnswer || isSimilar) {
+        group.push(q2);
+        processed.add(q2.id);
+      }
+    }
+
+    if (group.length > 1) {
+      groups.push(group);
+      processed.add(bank[i].id);
+      
+      // Hiển thị kết quả ngay lên màn hình
+      const ids = group.map(g => g.id).join(', ');
+      resultDiv.innerHTML += `
+        <div class="p-4 bg-slate-50 rounded-2xl border-l-4 border-purple-500">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-black text-purple-600 text-sm uppercase">Nhóm trùng:</span>
+            <button onclick="navigator.clipboard.writeText('${ids}'); alert('Đã copy danh sách ID!')" class="text-[10px] bg-white px-2 py-1 rounded border font-bold hover:bg-purple-50">Copy tất cả ID</button>
+          </div>
+          <p class="text-xs font-bold text-slate-700 mb-1">Các ID: ${ids}</p>
+          <p class="text-[11px] text-slate-500 italic truncate">Nội dung: ${group[0].question.substring(0, 100)}...</p>
+        </div>
+      `;
+    }
+  }
+  
+  if(groups.length === 0) {
+    resultDiv.innerHTML = '<div class="text-center py-10 font-bold text-emerald-500">🎉 Tuyệt vời! Không có câu nào trùng lặp.</div>';
+  }
+  return groups;
+};
 
   // --- 2. XÁC MINHXỬ LÝ NHẬP CÂU HỎI & SỬA LẺ (Giữ nguyên logic của thầy) ---
   const handleVerifyAdminOTP = () => {
@@ -504,6 +556,37 @@ const handleUploadLG = async () => {
     >
       <i className="fa-solid fa-trash-arrow-up"></i> Xác nhận xóa vĩnh viễn
     </button>
+  </div>
+)}
+
+       {currentTab === 'duplicate' && (
+  <div className="p-8 bg-white rounded-[2.5rem] border-2 border-purple-50 shadow-xl animate-fade-in">
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center">
+          <i className="fa-solid fa-magnifying-glass-chart text-xl"></i>
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-slate-800 uppercase">Phân tích câu trùng</h3>
+          <p className="text-xs text-slate-400 font-bold">Dựa trên nội dung và đáp án</p>
+        </div>
+      </div>
+      <button 
+        onClick={() => {
+          // Hàm này thầy gọi logic tìm trùng em viết ở dưới
+          const result = handleDeepScan(); 
+          alert(`Tìm thấy ${result.length} nhóm nghi ngờ trùng!`);
+        }}
+        className="px-6 py-3 bg-purple-600 text-white rounded-xl font-black text-xs uppercase hover:bg-purple-700 transition-all"
+      >
+        Bắt đầu quét ngân hàng
+      </button>
+    </div>
+
+    {/* Nơi hiện kết quả tìm trùng */}
+    <div id="duplicateResult" className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+       <p className="text-center text-slate-400 italic text-sm">Nhấn nút quét để bắt đầu phân tích dữ liệu...</p>
+    </div>
   </div>
 )}
       </div>
