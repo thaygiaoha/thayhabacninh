@@ -232,6 +232,7 @@ if (action === "getRouting") {
         var jsonText = raw.replace(/(\w+)\s*:/g, '"$1":').replace(/'/g, '"');
         var obj = JSON.parse(jsonText);
         if (!obj.classTag) obj.classTag = rows[i][1];
+        obj.loigiai = rows[i][4] || "";
         questions.push(obj);
       } catch (e) {}
     }
