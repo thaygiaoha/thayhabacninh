@@ -174,12 +174,19 @@ React.useEffect(() => {
             )}
 
             {/* 5. Giải thích chi tiết */}
-            {q.explanation && (
-              <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border-2 border-blue-100 border-dashed">
-                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">Hướng dẫn giải</p>
-                <div className="text-slate-700 leading-relaxed italic"><MathText content={q.explanation} /></div>
-              </div>
-            )}
+          
+            {q.loigiai && (
+            <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border-2 border-blue-100 border-dashed relative">
+            {/* Nhãn nhỏ xinh xắn ở góc */}
+            <div className="absolute -top-3 left-6 px-3 py-1 bg-blue-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest shadow-md">
+            Lời giải chi tiết
+          </div>
+    
+          <div className="text-slate-700 leading-relaxed pt-2">
+          <MathText content={q.loigiai} />
+    </div>
+  </div>
+)}
           </div>
         </div>
       );
