@@ -11,13 +11,30 @@ export const fetchQuestionsBank = async (): Promise<Question[]> => {
     const result = await response.json();
     
     if (result.status === "success" && Array.isArray(result.data)) {
-      questionsBank = result.data;
-      console.log(`✅ Đã nạp ${questionsBank.length} câu hỏi vào hệ thống.`);
+      // Chuyển đổi mảng thô từ Sheets thành Object chuẩn để App sử dụng
+      questionsBank = result.data.map((item: any) => {
+        // Tự động nhận diện loại câu hỏi dựa trên ID (MCQ, TF, SA)
+        const id = item[0]?.toString() || "";
+        let type: 'mcq' | 'true-false' | 'short-answer' = 'mcq';
+        if (id.toLowerCase().includes('tf')) type = 'true-false';
+        else if (id.toLowerCase().includes('sa')) type = 'short-answer';
+
+        return {
+          id: id,                 // Cột A
+          classTag: item[1] || "", // Cột B
+          question: item[2] || "", // Cột C
+          datetime: item[3] || "", // Cột D
+          loigiai: item[4] || "",  // Cột E (LỜI GIẢI QUAN TRỌNG NHẤT)
+          type: type
+        } as Question;
+      });
+
+      console.log(`✅ Thành công: Nạp ${questionsBank.length} câu hỏi kèm Lời giải cột E.`);
       return questionsBank;
     } 
     return [];
   } catch (error) {
-    console.error("❌ Lỗi kết nối ngân hàng câu hỏi:", error);
+    console.error("❌ Lỗi nạp ngân hàng câu hỏi:", error);
     return [];
   }
 };
@@ -88,21 +105,17 @@ export const pickQuestionsSmart = (
   // Trộn đáp án trước khi xuất xưởng
  // Trộn đáp án và đảm bảo dữ liệu lời giải được truyền đi
   return [...selectedPart1, ...selectedPart2, ...selectedPart3].map(q => {
-    // Copy toàn bộ dữ liệu câu hỏi (bao gồm cả field loigiai/loiGiai nếu có)
-    const newQ = { ...q };
-
-    // Ưu tiên chuẩn hóa field loigiai để ResultView.tsx dễ đọc
-    // Nếu trong Database thầy đặt tên là loiGiai hoặc item[4] thì nó sẽ được gán vào newQ.loigiai
-    newQ.loigiai = q.loigiai || (q as any).loiGiai || (q as any).explanation || "";
-
+    const newQ = { ...q }; 
+    
+    // Trộn phương án cho câu trắc nghiệm (nếu có)
     if (newQ.o && newQ.type === 'mcq') {
       newQ.shuffledOptions = shuffleArray(newQ.o);
     }
-    
+    // Trộn phương án cho câu đúng/sai (nếu có)
     if (newQ.s && newQ.type === 'true-false') {
       newQ.s = shuffleArray(newQ.s);
     }
-
+    
     return newQ;
   });
 };
