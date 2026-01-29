@@ -168,7 +168,7 @@ const handleWordParser = (text) => {
     
     const res = await resp.json();
     if (res.status === 'success') { 
-      alert(`🚀 Thành công! Đã chèn ${dataArray.length} dòng.`); 
+      alert(`🚀 Thành công! Đã chèn ${dataArray.length} câu hỏi vào ngân hàng.`); 
       setJsonInput(''); 
     }
   } catch (e) { alert("Lỗi gửi dữ liệu!"); }
