@@ -72,7 +72,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
 
         setFinalData_gv(finalRows);
         setConfig_gv(prev => ({...prev, mcqCount_gv: mcqs.length, tfCount_gv: tfs.length, saCount_gv: sas.length}));
-        alert(`✅ Đã nghiền xong ${finalRows.length} câu (20-6-6)!`);
+        alert(`✅ Đã tạo đề thành công , có ${finalRows.length} câu gồm: MCQ: ${mcqs.length}, TF: ${tfs.length}, TF: ${sas.length}`, );
       } catch (err) { alert("⚠️ Lỗi bóc tách: " + err.message); }
     };
     reader.readAsArrayBuffer(file);
