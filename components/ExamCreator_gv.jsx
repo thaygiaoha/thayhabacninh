@@ -121,64 +121,80 @@ const ExamCreator_gv = ({ onBack_gv }) => {
   reader.readAsArrayBuffer(file);
 };
   // đếm số câu từ word
-const handleFileUpload_gv = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+// Đếm số câu và NGHIỀN dữ liệu từ word
+  const handleFileUpload_gv = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }, {
-        styleMap: ["u => u"]
-      });
-      const htmlContent = result.value;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }, {
+          styleMap: ["u => u"]
+        });
+        const htmlContent = result.value;
 
-      // 1. CHẶT FILE THÀNH 3 PHẦN ĐỂ KIỂM TRA
-      const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
-      const part1 = cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
-      const part2 = cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
-      const part3 = cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || "";
+        // 1. CHẶT FILE THÀNH 3 PHẦN
+        const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
+        const part1 = cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
+        const part2 = cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
+        const part3 = cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || "";
 
-      // 2. ĐẾM THỰC TẾ TRONG FILE
-      const c1 = part1.split(/Câu\s+\d+[:.]/gi).length - 1;
-      const c2 = part2.split(/Câu\s+\d+[:.]/gi).length - 1;
-      const c3 = part3.split(/Câu\s+\d+[:.]/gi).length - 1;
+        // 2. ĐẾM VÀ ĐÓNG GÓI DỮ LIỆU (NGHIỀN)
+        let finalRowsForSheet = [];
+        const now = new Date();
+        const dateStr = "260130"; // Thầy có thể lấy động
+        const grade = "10"; 
+        let stt = 1;
 
-      // 3. CHỈ THÔNG BÁO - KHÔNG TỰ Ý ĐIỀN VÀO FORM
-      alert(
-        `📊 KẾT QUẢ KIỂM TRA FILE WORD:\n` +
-        `--------------------------------\n` +
-        `✅ Phần I (MCQ): ${c1} câu\n` +
-        `✅ Phần II (Đúng/Sai): ${c2} câu\n` +
-        `✅ Phần III (Trả lời ngắn): ${c3} câu\n\n` +
-        `👉 Thầy/Cô vui lòng kiểm tra xem đã khớp với số lượng nhập ở trên chưa nhé!`
-      );
+        // --- PHẦN I: MCQ ---
+        const mcqRaw = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+        mcqRaw.forEach((q) => {
+          const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+          const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+          const optionsParts = content.split(/[A-D][\.\)]/gi);
+          const match = content.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || content.match(/<u>(.*?)<\/u>/);
+          const qJson = { id: fullId, classTag: `${grade}01.a`, type: "mcq", question: optionsParts[0].replace(/<\/?[^>]+(>|$)/g, "").trim(), o: optionsParts.slice(1, 5).map(opt => opt.replace(/<\/?[^>]+(>|$)/g, "").trim()), a: match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "" };
+          finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
+          stt++;
+        });
 
-      // (Vẫn giữ finalRowsForSheet nếu thầy muốn lưu tạm dữ liệu để Admin dùng)
-      // setFinalData_gv(finalRowsForSheet); 
+        // --- PHẦN II: TF ---
+        const tfRaw = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+        tfRaw.forEach((q) => {
+          const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+          const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+          const qJson = { id: fullId, classTag: `${grade}01.b`, type: "true-false", question: content.replace(/<u>(.*?)<\/u>/gi, "$1").trim(), s: [...content.matchAll(/<u>(.*?)<\/u>/gi)].map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "").trim()) };
+          finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
+          stt++;
+        });
 
-    } catch (err) {
-      alert("⚠️ Lỗi đọc file: " + err.message);
-    }
+        // --- PHẦN III: SA ---
+        const saRaw = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+        saRaw.forEach((q) => {
+          const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+          const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+          const keyMatch = content.match(/Key=(.*?)>/i);
+          const qJson = { id: fullId, classTag: `${grade}01.c`, type: "short-answer", question: content.split(/Key=/i)[0].trim(), a: keyMatch ? keyMatch[1].trim() : "" };
+          finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
+          stt++;
+        });
+
+        // 3. LƯU VÀO STATE (PHẢI NẰM TRONG ONLOAD)
+        setFinalData_gv(finalRowsForSheet); 
+        
+        alert(
+          `📊 "MÁY NGHIỀN" ĐÃ XONG:\n` +
+          `✅ Tổng cộng: ${finalRowsForSheet.length} câu đã sẵn sàng.\n` +
+          `👉 Bây giờ thầy có thể bấm "Bắt đầu đẩy đề"!`
+        );
+
+      } catch (err) {
+        alert("⚠️ Lỗi xử lý: " + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
-  reader.readAsArrayBuffer(file);
-  console.log("Dữ liệu đã nghiền xong:", finalRowsForSheet);
-setFinalData_gv(finalRowsForSheet);
-};
-  // 2. Quản lý cấu hình đề thi (Khớp các cột A-M trong Sheet Exams)
-  const [config_gv, setConfig_gv] = useState({
-    exams_gv: '',       // Cột A
-    idNumber_gv: '',    // Cột B
-    fulltime_gv: 90,    // Cột C
-    mintime_gv: 15,     // Cột D
-    tab_gv: 3,          // Cột E
-    close_gv: '',       // Cột F
-    imgURL_gv: '',      // Cột G
-    mcqCount_gv: 0, mcqScore_gv: 0, // H, I
-    tfCount_gv: 0, tfScore_gv: 0,   // J, K
-    saCount_gv: 0, saScore_gv: 0    // L, M
-  });
-
   // 3. Load danh sách GV từ server
   useEffect(() => {
     const loadIdGv = async () => {
