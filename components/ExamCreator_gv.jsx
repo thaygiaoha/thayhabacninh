@@ -306,7 +306,7 @@ const handleFileUpload_gv = async (event) => {
                 <input type="number" placeholder="Max tab" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
               <input 
-                placeholder="imgURL (Thư mục ảnh)..." 
+                placeholder="Nhập ID imgURL (Thư mục ảnh)..." 
                 className="w-full p-4 rounded-2xl border-none shadow-sm text-[10px] font-mono outline-none focus:ring-2 focus:ring-emerald-500"
                 value={config_gv.imgURL_gv}
                 onChange={(e) => setConfig_gv({...config_gv, imgURL_gv: e.target.value})}
