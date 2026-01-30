@@ -283,81 +283,96 @@ const onChangeExams_gv = (key, value) => {
 
   // ================== RENDER ==================
   return (
-    <div className="p-6 space-y-6">
-      {!verified_gv && (
-        <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl">
-          <h2 className="text-xl font-black mb-6 text-center">
-            Xác minh Giáo viên
-          </h2>
+    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+  {!verified_gv && (
+    <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl border">
+      <h2 className="text-xl font-black mb-6 text-center text-slate-800">Xác minh Giáo viên</h2>
+      <input
+        className="w-full p-4 rounded-xl border focus:ring-2 ring-emerald-500 outline-none"
+        placeholder="Nhập ID giáo viên"
+        value={idgv_gv}
+        onChange={(e) => setIdgv_gv(e.target.value)}
+      />
+      {error_gv && <div className="text-red-500 text-sm mt-3 text-center">{error_gv}</div>}
+      <button
+        onClick={verifyGV_gv}
+        disabled={loading_gv}
+        className="w-full mt-6 bg-emerald-600 text-white p-4 rounded-xl font-black hover:bg-emerald-700 transition"
+      >
+        {loading_gv ? "Đang kiểm tra..." : "Xác minh"}
+      </button>
+    </div>
+  )}
 
-          <input
-            className="w-full p-4 rounded-xl border"
-            placeholder="Nhập ID giáo viên"
-            value={idgv_gv}
-            onChange={(e) => setIdgv_gv(e.target.value)}
-          />
+  {verified_gv && (
+    <>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-black text-slate-800">
+          Tạo đề từ Word – <span className="text-emerald-600">{gvInfo_gv?.name || idgv_gv}</span>
+        </h2>
+        <div className="bg-slate-100 px-4 py-2 rounded-full text-xs font-bold text-slate-500">GV ID: {idgv_gv}</div>
+      </div>
 
-          {error_gv && (
-            <div className="text-red-500 text-sm mt-3">{error_gv}</div>
-          )}
-
-          <button
-            onClick={verifyGV_gv}
-            disabled={loading_gv}
-            className="w-full mt-6 bg-emerald-600 text-white p-4 rounded-xl font-black"
-          >
-            {loading_gv ? "Đang kiểm tra..." : "Xác minh"}
-          </button>
+      <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
+        <div className="flex items-center gap-4 border-b pb-4">
+          <span className="font-bold text-slate-700">1. Chọn file Word:</span>
+          <input type="file" accept=".docx" onChange={handleUpload_gv} className="text-sm" />
         </div>
-      )}
 
-      {verified_gv && (
-        <>
-          <h2 className="text-xl font-bold">
-            Tạo đề từ Word – {gvInfo_gv?.name || idgv_gv}
-          </h2>
-
-          <input type="file" accept=".docx" onChange={handleUpload_gv} />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-2xl">
-  <div>
-    <label className="block text-xs font-bold mb-1">Mã đề (Exams)</label>
-    <input className="w-full p-2 border rounded-lg" value={exams_gv.Exams} onChange={(e) => onChangeExams_gv("Exams", e.target.value)} placeholder="VD: 1201" />
-  </div>
-  <div>
-    <label className="block text-xs font-bold mb-1">Thời gian (Phút)</label>
-    <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.fulltime} onChange={(e) => onChangeExams_gv("fulltime", e.target.value)} />
-  </div>
-  <div>
-    <label className="block text-xs font-bold mb-1">Thoát Tab tối đa</label>
-    <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.tab} onChange={(e) => onChangeExams_gv("tab", e.target.value)} />
-  </div>
-  <div>
-    <label className="block text-xs font-bold mb-1">Link Folder Ảnh</label>
-    <input className="w-full p-2 border rounded-lg" value={exams_gv.imgURL} onChange={(e) => onChangeExams_gv("imgURL", e.target.value)} placeholder="Dán link Drive" />
-  </div>
-</div>
-
-          <div className="flex gap-4">
-            <button
-              onClick={saveExamConfig_gv}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black"
-            >
-              Lưu cấu hình đề (exams)
-            </button>
-
-            <button
-              onClick={pushExamData_gv}
-              className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black"
-            >
-              Đẩy câu hỏi (exam_data)
-            </button>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="col-span-2">
+            <label className="block text-xs font-bold mb-1 text-slate-500">Mã đề (Exams)</label>
+            <input className="w-full p-2 border rounded-lg font-bold" value={exams_gv.Exams} onChange={(e) => onChangeExams_gv("Exams", e.target.value)} placeholder="VD: 1201" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold mb-1 text-slate-500">Tổng TG (Phút)</label>
+            <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.fulltime} onChange={(e) => onChangeExams_gv("fulltime", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold mb-1 text-slate-500">TG tối thiểu</label>
+            <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.mintime} onChange={(e) => onChangeExams_gv("mintime", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold mb-1 text-slate-500">Thoát Tab</label>
+            <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.tab} onChange={(e) => onChangeExams_gv("tab", e.target.value)} />
           </div>
 
-          <pre className="bg-gray-100 p-4 text-sm max-h-96 overflow-auto rounded-xl">
-            {JSON.stringify(questions, null, 2)}
-          </pre>
-        </>
-      )}
-    </div>
-  );
-}
+          <div>
+            <label className="block text-xs font-bold mb-1 text-blue-600">Điểm P.I</label>
+            <input type="number" step="0.25" className="w-full p-2 border border-blue-200 rounded-lg" value={exams_gv.scoremcq} onChange={(e) => onChangeExams_gv("scoremcq", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold mb-1 text-emerald-600">Điểm P.II</label>
+            <input type="number" step="0.25" className="w-full p-2 border border-emerald-200 rounded-lg" value={exams_gv.scoretf} onChange={(e) => onChangeExams_gv("scoretf", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold mb-1 text-orange-600">Điểm P.III</label>
+            <input type="number" step="0.25" className="w-full p-2 border border-orange-200 rounded-lg" value={exams_gv.scoresa} onChange={(e) => onChangeExams_gv("scoresa", e.target.value)} />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-bold mb-1 text-slate-500">Link Drive Ảnh</label>
+            <input className="w-full p-2 border rounded-lg" value={exams_gv.imgURL} onChange={(e) => onChangeExams_gv("imgURL", e.target.value)} placeholder="Link folder ảnh" />
+          </div>
+        </div>
+
+        <button
+          onClick={saveAll_gv}
+          disabled={loading_gv || questions.length === 0}
+          className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-indigo-700 disabled:bg-slate-300 transition shadow-lg shadow-indigo-100"
+        >
+          {loading_gv ? "ĐANG LƯU DỮ LIỆU..." : "XÁC NHẬN & ĐẨY ĐỀ LÊN HỆ THỐNG"}
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="font-bold text-slate-700 flex justify-between">
+          <span>Xem trước dữ liệu:</span>
+          <span className="text-emerald-600">{questions.length} câu đã quét</span>
+        </h3>
+        <pre className="bg-slate-900 text-emerald-400 p-4 text-xs max-h-60 overflow-auto rounded-2xl shadow-inner">
+          {JSON.stringify(questions, null, 2)}
+        </pre>
+      </div>
+    </>
+  )}
+</div>
