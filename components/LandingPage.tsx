@@ -9,7 +9,7 @@ interface LandingPageProps {
   user: AppUser | null;
   onOpenAuth: () => void;
   onOpenVip: () => void;
-  setView: (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
+  setView: (mode: 'cauhoi' | 'word') => void;
 }
 interface UserAcc {
   phoneNumber: string;
