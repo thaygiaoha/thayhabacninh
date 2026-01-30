@@ -211,6 +211,34 @@ const onChangeExams_gv = (key, value) => {
     [key]: value
   }));
 };
+  // =========================
+  const finalPush_gv = async () => {
+  if (!questions.length) return alert("Chưa có câu hỏi thầy ơi!");
+  if (!exams_gv.Exams) return alert("Thầy chưa nhập mã đề kìa!");
+
+  setLoading_gv(true);
+  try {
+    const res = await fetch(apiGV_gv, {
+      method: "POST",
+      // Không dùng mode: 'no-cors' để nhận được phản hồi OK/Error
+      body: JSON.stringify({
+        action: "saveFullExam", // Khớp với Script đêm qua
+        examConfig: exams_gv,
+        examQuestions: normalizeQuestions_gv(questions)
+      }),
+    }).then(r => r.text()); // Nhận về chữ "OK"
+
+    if (res === "OK") {
+      alert("🚀 Tuyệt vời! Đề đã về bản chuẩn.");
+    } else {
+      alert("❌ Có lỗi: " + res);
+    }
+  } catch (err) {
+    alert("❌ Lỗi kết nối: " + err.message);
+  } finally {
+    setLoading_gv(false);
+  }
+};
 
 
   // ================== RENDER ==================
