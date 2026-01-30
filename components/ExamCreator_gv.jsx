@@ -16,34 +16,58 @@ const handleFileUpload_gv = async (event) => {
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const arrayBuffer = e.target.result;
     try {
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      const text = result.value;
+      const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }, {
+        styleMap: ["u => u"]
+      });
+      const htmlContent = result.value;
+      const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
+      // 1. CHẶT FILE THÀNH 3 PHẦN LỚN
+      const part1 = htmlContent.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
+      const part2 = htmlContent.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
+      const part3 = htmlContent.split(/Phần\s*(?:III|3)/i)[1] || "";
 
-      // Logic bóc tách "đặc sản" đề Toán của thầy Hà
-      const tfCount = (text.match(/\[TF\]|Chọn\s+đúng\s+hoặc\s+sai/gi) || []).length;
-      const saCount = (text.match(/\[SA\]|Trả\s+lời\s+ngắn|Điền\s+đáp\s+số/gi) || []).length;
-      const totalQuestions = (text.match(/Câu\s+\d+[:.]/gi) || []).length;
-      
-      // Số câu MCQ = Tổng số câu trừ đi các câu loại đặc biệt
-      const mcqCount = Math.max(0, totalQuestions - tfCount - saCount);
+      let finalData = [];
 
-      // Cập nhật State một phát ăn ngay 3 cột
+      // --- XỬ LÝ PHẦN I: MCQ ---
+      const mcqQuestions = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      mcqQuestions.forEach((q, i) => {
+        const match = q.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || q.match(/<u>(.*?)<\/u>/);
+        const ans = match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "";
+        finalData.push({ type: "MCQ", content: q, answer: ans });
+      });
+
+      // --- XỬ LÝ PHẦN II: TF (Đúng/Sai) ---
+      const tfQuestions = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      tfQuestions.forEach((q, i) => {
+        // Tóm tất cả các ý gạch chân, cách nhau bằng dấu |
+        const correctBranches = [...q.matchAll(/<u>(.*?)<\/u>/gi)].map(m => 
+          m[1].replace(/<\/?[^>]+(>|$)/g, "").trim()
+        );
+        finalData.push({ type: "TF", content: q, answer: correctBranches.join("|") });
+      });
+
+      // --- XỬ LÝ PHẦN III: SA (Trả lời ngắn) ---
+      const saQuestions = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      saQuestions.forEach((q, i) => {
+        const keyMatch = q.match(/Key=(.*?)>/i);
+        const ans = keyMatch ? keyMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "";
+        finalData.push({ type: "SA", content: q, answer: ans });
+      });
+
+      // 2. CẬP NHẬT GIAO DIỆN "NHẢY SỐ"
       setConfig_gv(prev => ({
         ...prev,
-        mcqCount_gv: mcqCount,
-        tfCount_gv: tfCount,
-        saCount_gv: saCount,
-        // Tự động gán điểm mặc định nếu thầy muốn (ví dụ 10 điểm chia đều)
-        mcqScore_gv: mcqCount > 0 ? 3.0 : 0, 
-        tfScore_gv: tfCount > 0 ? 4.0 : 0,
-        saScore_gv: saCount > 0 ? 3.0 : 0
+        mcqCount_gv: mcqQuestions.length,
+        tfCount_gv: tfQuestions.length,
+        saCount_gv: saQuestions.length
       }));
 
-      console.log("✅ Phân tích đề thành công!");
+      alert(`🚀 Chế biến thành công:\n- Phần I: ${mcqQuestions.length} câu\n- Phần II: ${tfQuestions.length} câu\n- Phần III: ${saQuestions.length} câu`);
+      console.log("Dữ liệu câu hỏi chi tiết:", finalData);
+
     } catch (err) {
-      alert("Lỗi đọc file Word rồi thầy ơi!");
+      alert("Lỗi: " + err.message);
     }
   };
   reader.readAsArrayBuffer(file);
