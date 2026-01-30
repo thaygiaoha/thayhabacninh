@@ -5,6 +5,7 @@ import mammoth from 'mammoth';
 
 const ExamCreator_gv = ({ onBack_gv }) => {
   // 1. Quản lý trạng thái xác minh
+  const [finalData_gv, setFinalData_gv] = useState([]); // Chỗ này để giữ 1000 câu sau khi nghiền
   const [isVerified_gv, setIsVerified_gv] = useState(false);
   const [gvName_gv, setGvName_gv] = useState("");
   const [dsGiaoVien_gv, setDsGiaoVien_gv] = useState([]);
@@ -161,6 +162,8 @@ const handleFileUpload_gv = async (event) => {
     }
   };
   reader.readAsArrayBuffer(file);
+  console.log("Dữ liệu đã nghiền xong:", finalRowsForSheet);
+setFinalData_gv(finalRowsForSheet);
 };
   // 2. Quản lý cấu hình đề thi (Khớp các cột A-M trong Sheet Exams)
   const [config_gv, setConfig_gv] = useState({
@@ -214,30 +217,35 @@ const handleFileUpload_gv = async (event) => {
     }
   };
 // Gửi dữ liệu cấu hình về sheet exams
-  const handleSubmit_gv = async () => {
+ const handleSubmit_gv = async () => {
   const idgv = config_gv.idNumber_gv?.trim();
   const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL;
 
-  // Đóng gói tất cả vào một gói quà
+  if (finalData_gv.length === 0) {
+    return alert("⚠️ Thầy chưa tải file Word hoặc file chưa được xử lý xong!");
+  }
+
   const payload = {
     action: "saveFullExam",
     data: {
       ...config_gv,
-      exams: config_gv.exams_gv,
       idNumber: idgv,
-      fulltime: config_gv.fulltime_gv,
-      questions: finalData_gv // Đây chính là 1000 câu thầy đã "nghiền"
+      questions: finalData_gv // Bây giờ finalData_gv đã có dữ liệu rồi
     }
   };
 
   try {
+    // Dùng POST để chuyển khối lượng dữ liệu lớn
     const response = await fetch(GV_API_URL, {
       method: 'POST',
+      mode: 'no-cors', // Dùng no-cors nếu Script của thầy chưa xử lý OPTIONS
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    alert("🎉 Đã đẩy thành công 13 cột sang Exams và toàn bộ câu hỏi sang exam_data!");
+
+    alert("🚀 Tuyệt vời! Đã bắn thành công cấu hình và toàn bộ ngân hàng câu hỏi!");
   } catch (error) {
-    alert("❌ Lỗi rồi thầy ơi, dữ liệu lớn quá nên POST mới chịu được!");
+    alert("❌ Lỗi kết nối: " + error.message);
   }
 };
   return (
