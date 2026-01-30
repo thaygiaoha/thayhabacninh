@@ -21,7 +21,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   user,
   onOpenAuth,
   onOpenVip,
-  setView
+  setView: (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
 }) => {
   // --- GIỮ NGUYÊN TOÀN BỘ LOGIC DỮ LIỆU CỦA THẦY ---
   const REDIRECT_LINKS: Record<string, string> = { "default": "https://www.facebook.com/hoctoanthayha.bg" };
