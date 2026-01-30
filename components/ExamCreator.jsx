@@ -17,3 +17,12 @@ const [examData, setExamData] = useState({
   TF: 0, scoretf: 0,   // Phần II
   SA: 0, scoresa: 0    // Phần III
 });
+const [examConfig, setExamConfig] = useState({
+  exams: '', idNumber: '', 
+  fulltime: 90, 
+  mintime: 15, 
+  tab: 3, close: '', imgURL: '',
+  mcqCount: 0, mcqScore: 0,
+  tfCount: 0, tfScore: 0,
+  saCount: 0, saScore: 0
+});
