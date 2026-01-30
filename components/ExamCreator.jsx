@@ -18,11 +18,10 @@ const [examData, setExamData] = useState({
   SA: 0, scoresa: 0    // Phần III
 });
 const [examConfig, setExamConfig] = useState({
-  exams: '', idNumber: '', 
-  fulltime: 90, 
-  mintime: 15, 
+  exams: '', idNumber: '', fulltime: 90, mintime: 15, 
   tab: 3, close: '', imgURL: '',
-  mcqCount: 0, mcqScore: 0,
-  tfCount: 0, tfScore: 0,
-  saCount: 0, saScore: 0
+  mcq: { count: 0, score: 0 },
+  tf: { count: 0, score: 0 },
+  sa: { count: 0, score: 0 },
+  file: null
 });
