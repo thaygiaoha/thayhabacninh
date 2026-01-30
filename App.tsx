@@ -11,6 +11,7 @@ import { getRandomQuizQuestion } from './questionquiz';
 import { AppProvider } from './contexts/AppContext';
 import AdminPanel from './components/AdminManager';
 import { fetchQuestionsBank } from './questions';
+import ExamCreator_gv from './components/ExamCreator'; // Thầy nhớ check đúng tên file nhé
 
 const App: React.FC = () => {
   // Thêm 'admin' vào danh sách các View
@@ -136,12 +137,20 @@ useEffect(() => {
     }}
   />
 )}
-              {currentView === 'admin' && (
-                <AdminPanel 
-              mode={adminMode} 
-              onBack={goHome} 
-              />
-                )}
+             {currentView === 'admin' && (
+      adminMode === 'word' ? (
+        <ExamCreator_gv 
+          onBack_gv={goHome} 
+          // Truyền danh sách GV nếu thầy đã fetch ở App, 
+          // hoặc để ExamCreator_gv tự fetch như em hướng dẫn lúc nãy
+        />
+      ) : (
+        <AdminPanel 
+          mode={adminMode} 
+          onBack={goHome} 
+        />
+      )
+    )}
               {currentView === 'portal' && selectedGrade && (
                 <ExamPortal grade={selectedGrade.toString()} onBack={goHome} onStart={handleStartExam} />
               )}
