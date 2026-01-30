@@ -9,6 +9,116 @@ const ExamCreator_gv = ({ onBack_gv }) => {
   const [gvName_gv, setGvName_gv] = useState("");
   const [dsGiaoVien_gv, setDsGiaoVien_gv] = useState([]);
   const [loading_gv, setLoading_gv] = useState(true);
+  // admin upload từ word
+  const handleAdminUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }, {
+        styleMap: ["u => u"]
+      });
+      const htmlContent = result.value;
+
+      // 1. CHẶT 3 PHẦN LỚN (Chấp nhận Phần I, 1, II, 2...)
+      const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
+      const sections = {
+        part1: cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "",
+        part2: cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "",
+        part3: cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || ""
+      };
+
+      let finalDataForSheet = [];
+      const timestamp = new Date().getTime(); // Dùng timestamp làm gốc ID cho nhanh
+
+      // --- HELPER: Tách Câu và Lời giải ---
+      const splitQandLG = (rawHtml) => {
+        const parts = rawHtml.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+        return {
+          questionPart: parts[0],
+          lgPart: parts[1] || "Đang cập nhật lời giải..."
+        };
+      };
+
+      // --- XỬ LÝ PHẦN I: MCQ (Trắc nghiệm 4 lựa chọn) ---
+      const mcqRaw = sections.part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      mcqRaw.forEach((raw, i) => {
+        const { questionPart, lgPart } = splitQandLG(raw);
+        const id = `MCQ_${timestamp}_${i}`;
+        
+        // Tìm đáp án gạch chân
+        const match = questionPart.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || questionPart.match(/<u>(.*?)<\/u>/);
+        const ans = match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "";
+
+        // Tạo JSON Question khớp cột C
+        const questionJson = {
+          id: id,
+          type: "mcq",
+          part: "I",
+          content: questionPart.trim(),
+          a: ans
+        };
+
+        // Tạo JSON LG khớp cột E
+        const lgJson = { id: id, loigiai: lgPart.trim() };
+
+        finalDataForSheet.push([id, "1001.1", JSON.stringify(questionJson), new Date(), JSON.stringify(lgJson)]);
+      });
+
+      // --- XỬ LÝ PHẦN II: TF (Đúng/Sai) ---
+      const tfRaw = sections.part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      tfRaw.forEach((raw, i) => {
+        const { questionPart, lgPart } = splitQandLG(raw);
+        const id = `TF_${timestamp}_${i}`;
+        
+        // Tách các ý gạch chân (Đúng)
+        const correctOnes = [...questionPart.matchAll(/<u>(.*?)<\/u>/gi)].map(m => m[1].trim());
+
+        const questionJson = {
+          id: id,
+          type: "true-false",
+          part: "II",
+          content: questionPart.trim(),
+          s: correctOnes // Mảng các ý đúng
+        };
+
+        const lgJson = { id: id, loigiai: lgPart.trim() };
+        finalDataForSheet.push([id, "1001.2", JSON.stringify(questionJson), new Date(), JSON.stringify(lgJson)]);
+      });
+
+      // --- XỬ LÝ PHẦN III: SA (Trả lời ngắn) ---
+      const saRaw = sections.part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      saRaw.forEach((raw, i) => {
+        const { questionPart, lgPart } = splitQandLG(raw);
+        const id = `SA_${timestamp}_${i}`;
+        
+        const keyMatch = questionPart.match(/Key=(.*?)>/i);
+        const ans = keyMatch ? keyMatch[1].trim() : "";
+
+        const questionJson = {
+          id: id,
+          type: "short-answer",
+          part: "III",
+          content: questionPart.trim(),
+          a: ans
+        };
+
+        const lgJson = { id: id, loigiai: lgPart.trim() };
+        finalDataForSheet.push([id, "1001.3", JSON.stringify(questionJson), new Date(), JSON.stringify(lgJson)]);
+      });
+
+      // GỬI MẢNG finalDataForSheet LÊN SCRIPT (Dùng setValues vào sheet nganhang)
+      console.log("Dữ liệu sẵn sàng đẩy lên Sheet:", finalDataForSheet);
+      // Gọi hàm pushToSheet(finalDataForSheet) tại đây...
+
+    } catch (err) {
+      alert("Lỗi bóc tách: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+};
   // đếm số câu từ word
 const handleFileUpload_gv = async (event) => {
   const file = event.target.files[0];
@@ -21,50 +131,78 @@ const handleFileUpload_gv = async (event) => {
         styleMap: ["u => u"]
       });
       const htmlContent = result.value;
+      
+      // 0. CHUẨN BỊ THÔNG SỐ ĐỊNH DANH (ID theo quy tắc của thầy)
+      const now = new Date();
+      const dateStr = "260130"; // Năm-Tháng-Ngày (Thầy có thể lấy động)
+      const grade = "10"; // Khối lớp
+      let stt = 1;
+
+      // 1. CHẶT FILE THÀNH 3 PHẦN LỚN (Xử lý cả số La Mã và số thường)
       const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
-      // 1. CHẶT FILE THÀNH 3 PHẦN LỚN
-      const part1 = htmlContent.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
-      const part2 = htmlContent.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
-      const part3 = htmlContent.split(/Phần\s*(?:III|3)/i)[1] || "";
+      const part1 = cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
+      const part2 = cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
+      const part3 = cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || "";
 
-      let finalData = [];
+      let finalRowsForSheet = [];
 
-      // --- XỬ LÝ PHẦN I: MCQ ---
-      const mcqQuestions = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-      mcqQuestions.forEach((q, i) => {
-        const match = q.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || q.match(/<u>(.*?)<\/u>/);
-        const ans = match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "";
-        finalData.push({ type: "MCQ", content: q, answer: ans });
+      // --- PHẦN I: MCQ (Đóng gói mảng o, a) ---
+      const mcqRaw = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      mcqRaw.forEach((q) => {
+        const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+        const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+        const optionsParts = content.split(/[A-D][\.\)]/gi);
+        const questionText = optionsParts[0].replace(/<\/?[^>]+(>|$)/g, "").trim();
+        const optionsArray = optionsParts.slice(1, 5).map(opt => opt.replace(/<\/?[^>]+(>|$)/g, "").trim());
+        const match = content.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || content.match(/<u>(.*?)<\/u>/);
+        
+        const qJson = {
+          id: fullId, classTag: `${grade}01.a`, type: "mcq",
+          part: "PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn",
+          question: questionText, o: optionsArray,
+          a: match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : ""
+        };
+        finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
+        stt++;
       });
 
-      // --- XỬ LÝ PHẦN II: TF (Đúng/Sai) ---
-      const tfQuestions = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-      tfQuestions.forEach((q, i) => {
-        // Tóm tất cả các ý gạch chân, cách nhau bằng dấu |
-        const correctBranches = [...q.matchAll(/<u>(.*?)<\/u>/gi)].map(m => 
-          m[1].replace(/<\/?[^>]+(>|$)/g, "").trim()
-        );
-        finalData.push({ type: "TF", content: q, answer: correctBranches.join("|") });
+      // --- PHẦN II: TF (Đóng gói Đúng/Sai) ---
+      const tfRaw = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      tfRaw.forEach((q) => {
+        const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+        const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+        const correctOnes = [...content.matchAll(/<u>(.*?)<\/u>/gi)].map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "").trim());
+        
+        const qJson = {
+          id: fullId, classTag: `${grade}01.b`, type: "true-false",
+          part: "PHẦN II. Câu hỏi trắc nghiệm đúng sai",
+          question: content.replace(/<u>(.*?)<\/u>/gi, "$1").trim(), // Nội dung giữ text, bỏ gạch chân
+          s: correctOnes // Mảng các ý đúng
+        };
+        finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
+        stt++;
       });
 
-      // --- XỬ LÝ PHẦN III: SA (Trả lời ngắn) ---
-      const saQuestions = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-      saQuestions.forEach((q, i) => {
-        const keyMatch = q.match(/Key=(.*?)>/i);
-        const ans = keyMatch ? keyMatch[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "";
-        finalData.push({ type: "SA", content: q, answer: ans });
+      // --- PHẦN III: SA (Trả lời ngắn) ---
+      const saRaw = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+      saRaw.forEach((q) => {
+        const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+        const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+        const keyMatch = content.match(/Key=(.*?)>/i);
+        
+        const qJson = {
+          id: fullId, classTag: `${grade}01.c`, type: "short-answer",
+          part: "PHẦN III. Câu hỏi trắc nghiệm trả lời ngắn",
+          question: content.split(/Key=/i)[0].trim(),
+          a: keyMatch ? keyMatch[1].trim() : ""
+        };
+        finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
+        stt++;
       });
 
-      // 2. CẬP NHẬT GIAO DIỆN "NHẢY SỐ"
-      setConfig_gv(prev => ({
-        ...prev,
-        mcqCount_gv: mcqQuestions.length,
-        tfCount_gv: tfQuestions.length,
-        saCount_gv: saQuestions.length
-      }));
-
-      alert(`🚀 Chế biến thành công:\n- Phần I: ${mcqQuestions.length} câu\n- Phần II: ${tfQuestions.length} câu\n- Phần III: ${saQuestions.length} câu`);
-      console.log("Dữ liệu câu hỏi chi tiết:", finalData);
+      // 2. CẬP NHẬT GIAO DIỆN VÀ CHỜ LỆNH ĐẨY SHEET
+      setFinalData_gv(finalRowsForSheet); // Lưu mảng 1000 câu vào State
+      alert(`🚀 "Máy nghiền" đã xong ${finalRowsForSheet.length} câu!\nSẵn sàng đẩy lên sheet(exam_data).`);
 
     } catch (err) {
       alert("Lỗi: " + err.message);
