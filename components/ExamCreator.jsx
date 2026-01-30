@@ -1,12 +1,42 @@
 import React, { useState } from "react";
+import { DANHGIA_URL, API_ROUTING } from '../config';
 import mammoth from "mammoth";
 
 export default function ExamCreator() {
   const [html, setHtml] = useState("");
   const [questions, setQuestions] = useState([]);
+ const [verified_gv, setVerified_gv] = useState(false);
+const [idgv_gv, setIdgv_gv] = useState("");
+const [gvInfo_gv, setGvInfo_gv] = useState(null);
+const [loading_gv, setLoading_gv] = useState(false);
+const [error_gv, setError_gv] = useState("");
+  // xác minh GV
+const verifyGV_gv = async () => {
+  if (!idgv_gv) return;
+
+  setLoading_gv(true);
+  setError_gv("");
+
+  const res = await fetch(DANHGIA_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "verifyGV",
+      idgv: idgv_gv
+    })
+  }).then(r => r.json());
+
+  setLoading_gv(false);
+
+  if (res.status === "success") {
+    setVerified_gv(true);
+    setGvInfo_gv(res.data);
+  } else {
+    setError_gv("ID giáo viên không tồn tại hoặc đã bị khóa");
+  }
+};
 
   // 1. Upload file Word
-  const handleUpload = async (e) => {
+  const handleUpload_gv = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -114,6 +144,39 @@ export default function ExamCreator() {
 
     setQuestions(result);
   };
+  {!verified_gv && (
+  <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl">
+    <h2 className="text-xl font-black mb-6 text-center">
+      Xác minh Giáo viên
+    </h2>
+
+    <input
+      className="w-full p-4 rounded-xl border"
+      placeholder="Nhập ID giáo viên"
+      value={idgv_gv}
+      onChange={e => setIdgv_gv(e.target.value)}
+    />
+
+    {error_gv && (
+      <div className="text-red-500 text-sm mt-3">{error_gv}</div>
+    )}
+
+    <button
+      onClick={verifyGV_gv}
+      disabled={loading_gv}
+      className="w-full mt-6 bg-emerald-600 text-white p-4 rounded-xl font-black"
+    >
+      {loading_gv ? "Đang kiểm tra..." : "Xác minh"}
+    </button>
+  </div>
+)}
+  {verified_gv && (
+  <ExamForm_gv
+    gvInfo_gv={gvInfo_gv}
+  />
+)}
+
+
 
   return (
     <div className="p-6 space-y-4">
