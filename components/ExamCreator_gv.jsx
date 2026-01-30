@@ -178,14 +178,46 @@ const handleFileUpload_gv = async (event) => {
               <i className="fa-solid fa-list-check"></i> Bước 2: Cấu trúc & Tải tệp
             </p>
             <div className="grid grid-cols-3 gap-4 mb-8">
-              {['MCQ', 'TF', 'SA'].map((type) => (
-                <div key={type} className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                  <p className="text-[10px] font-black text-emerald-500 mb-2 uppercase">{type}</p>
-                  <input type="number" placeholder="Câu" className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none mb-3 text-sm font-bold" />
-                  <input type="number" step="0.1" placeholder="Điểm" className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none text-sm font-bold" />
-                </div>
-              ))}
-            </div>
+  {['MCQ', 'TF', 'SA'].map((type) => {
+    // Xác định field name tương ứng trong state config_gv
+    const countField = type.toLowerCase() + 'Count_gv'; 
+    const scoreField = type.toLowerCase() + 'Score_gv';
+    const label = type === 'MCQ' ? 'Trắc nghiệm' : type === 'TF' ? 'Đúng/Sai' : 'T.Lời ngắn';
+
+    return (
+      <div key={type} className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:border-emerald-500/50 transition-all group">
+        <p className="text-[10px] font-black text-emerald-500 mb-2 uppercase tracking-tighter">
+          {type} ({label})
+        </p>
+        
+        {/* Input Số câu - Tự động cập nhật khi upload Word */}
+        <div className="relative">
+          <input 
+            type="number" 
+            placeholder="Câu" 
+            value={config_gv[countField] || ''}
+            onChange={(e) => setConfig_gv({...config_gv, [countField]: parseInt(e.target.value) || 0})}
+            className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none mb-3 text-sm font-black text-white placeholder:text-slate-600 transition-colors" 
+          />
+          <span className="absolute right-0 top-0 text-[9px] text-slate-500 font-bold uppercase group-hover:text-emerald-500 transition-colors">Số câu</span>
+        </div>
+
+        {/* Input Điểm số */}
+        <div className="relative">
+          <input 
+            type="number" 
+            step="0.1" 
+            placeholder="Điểm" 
+            value={config_gv[scoreField] || ''}
+            onChange={(e) => setConfig_gv({...config_gv, [scoreField]: parseFloat(e.target.value) || 0})}
+            className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none text-sm font-black text-emerald-400 placeholder:text-slate-600 transition-colors" 
+          />
+          <span className="absolute right-0 top-0 text-[9px] text-slate-500 font-bold uppercase group-hover:text-emerald-500 transition-colors">Tổng điểm</span>
+        </div>
+      </div>
+    );
+  })}
+</div>
            {/* DROPZONE FILE WORD */}
 <div className="relative group border-2 border-dashed border-slate-700 rounded-[2rem] p-12 text-center hover:border-emerald-500 hover:bg-emerald-500/5 transition-all cursor-pointer">
   {/* GẮN VÀO ĐÂY THẦY NHÉ */}
