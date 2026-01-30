@@ -4,32 +4,21 @@ import React, { useState, useEffect } from 'react';
 import mammoth from 'mammoth';
 
 const ExamCreator_gv = ({ onBack_gv }) => {
-  // ==========================================
-  // 1. KHAI BÁO TẤT CẢ STATE LÊN ĐẦU (MÓNG NHÀ)
-  // ==========================================
+  // 1. STATE (Móng nhà - Đã đưa lên đầu chuẩn đét)
   const [finalData_gv, setFinalData_gv] = useState([]); 
   const [isVerified_gv, setIsVerified_gv] = useState(false);
   const [gvName_gv, setGvName_gv] = useState("");
   const [dsGiaoVien_gv, setDsGiaoVien_gv] = useState([]);
   const [loading_gv, setLoading_gv] = useState(true);
   const [config_gv, setConfig_gv] = useState({
-    exams_gv: '',       // Cột A
-    idNumber_gv: '',    // Cột B
-    fulltime_gv: 90,    // Cột C
-    mintime_gv: 15,     // Cột D
-    tab_gv: 3,          // Cột E
-    close_gv: '',       // Cột F
-    imgURL_gv: '',      // Cột G
-    mcqCount_gv: 0, mcqScore_gv: 0, // H, I
-    tfCount_gv: 0, tfScore_gv: 0,   // J, K
-    saCount_gv: 0, saScore_gv: 0    // L, M
+    exams_gv: '', idNumber_gv: '', fulltime_gv: 90, mintime_gv: 15, tab_gv: 3, 
+    close_gv: '', imgURL_gv: '',
+    mcqCount_gv: 0, mcqScore_gv: 0, 
+    tfCount_gv: 0, tfScore_gv: 0,  
+    saCount_gv: 0, saScore_gv: 0   
   });
 
-  // ==========================================
-  // 2. CÁC HÀM XỬ LÝ (XÂY TƯỜNG)
-  // ==========================================
-
-  // Hàm "nghiền" file Word
+  // 2. HÀM NGHIỀN FILE WORD (Đã gộp bóc tách và tự đếm số câu)
   const handleFileUpload_gv = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -38,121 +27,99 @@ const ExamCreator_gv = ({ onBack_gv }) => {
       try {
         const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }, { styleMap: ["u => u"] });
         const htmlContent = result.value;
-
-        // Chặt 3 phần... (Logic bóc tách của thầy em giữ nguyên)
         const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
+        
         const part1 = cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
         const part2 = cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
         const part3 = cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || "";
 
-        let finalRowsForSheet = [];
+        let finalRows = [];
         let stt = 1;
-        const dateStr = "260130"; // Thầy có thể lấy từ new Date()
+        const dateStr = new Date().toLocaleDateString('en-GB').split('/').reverse().join('').substring(2); // VD: 260130
+        const grade = "10"; 
 
-        // --- Xử lý MCQ, TF, SA (Gộp logic nghiền vào đây) ---
-        // MCQ... (Logic như cũ)
-        const mcqRaw = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-        mcqRaw.forEach(q => { /* ... push vào finalRowsForSheet ... */ });
+        // --- Xử lý MCQ ---
+        const mcqs = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+        mcqs.forEach(raw => {
+          const id = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+          const [content, lg] = raw.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+          const parts = content.split(/[A-D][\.\)]/gi);
+          const match = content.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || content.match(/<u>(.*?)<\/u>/);
+          const qJson = { id, type: "mcq", question: parts[0].replace(/<\/?[^>]+(>|$)/g, "").trim(), o: parts.slice(1, 5).map(o => o.replace(/<\/?[^>]+(>|$)/g, "").trim()), a: match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : "" };
+          finalRows.push([id, `${grade}01.1`, JSON.stringify(qJson), new Date(), JSON.stringify({id, loigiai: (lg || "").trim()})]);
+          stt++;
+        });
 
-        // Sau khi nghiền xong hết:
-        setFinalData_gv(finalRowsForSheet); 
-        alert(`📊 Đã nghiền xong ${finalRowsForSheet.length} câu!`);
-      } catch (err) { alert("Lỗi: " + err.message); }
+        // --- Xử lý TF ---
+        const tfs = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+        tfs.forEach(raw => {
+          const id = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+          const [content, lg] = raw.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+          const qJson = { id, type: "true-false", question: content.replace(/<u>(.*?)<\/u>/gi, "$1").trim(), s: [...content.matchAll(/<u>(.*?)<\/u>/gi)].map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "").trim()) };
+          finalRows.push([id, `${grade}01.2`, JSON.stringify(qJson), new Date(), JSON.stringify({id, loigiai: (lg || "").trim()})]);
+          stt++;
+        });
+
+        // --- Xử lý SA ---
+        const sas = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
+        sas.forEach(raw => {
+          const id = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
+          const [content, lg] = raw.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
+          const keyMatch = content.match(/Key=(.*?)>/i);
+          const qJson = { id, type: "short-answer", question: content.split(/Key=/i)[0].trim(), a: keyMatch ? keyMatch[1].trim() : "" };
+          finalRows.push([id, `${grade}01.3`, JSON.stringify(qJson), new Date(), JSON.stringify({id, loigiai: (lg || "").trim()})]);
+          stt++;
+        });
+
+        setFinalData_gv(finalRows);
+        // Tự động cập nhật số câu vào config cho thầy luôn!
+        setConfig_gv(prev => ({...prev, mcqCount_gv: mcqs.length, tfCount_gv: tfs.length, saCount_gv: sas.length}));
+        alert(`✅ Đã nghiền xong ${finalRows.length} câu! Số lượng đã tự điền vào bảng.`);
+      } catch (err) { alert("⚠️ Lỗi: " + err.message); }
     };
     reader.readAsArrayBuffer(file);
   };
 
-  // Hàm gửi dữ liệu lên Google Sheet
+  // 3. GỬI DỮ LIỆU (Chỉ giữ 1 bản duy nhất)
   const handleSubmit_gv = async () => {
     const idgv = config_gv.idNumber_gv?.trim();
+    if (!idgv) return alert("⚠️ Thầy chưa nhập Mã xác minh!");
     const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL;
 
     if (finalData_gv.length === 0) return alert("⚠️ Thầy chưa tải file Word!");
 
-    const payload = {
-      action: "saveFullExam",
-      data: { ...config_gv, idNumber: idgv, questions: finalData_gv }
-    };
-
+    const payload = { action: "saveFullExam", data: { ...config_gv, idNumber: idgv, questions: finalData_gv } };
     try {
-      await fetch(GV_API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      alert("🚀 Bắn đề thành công!");
-    } catch (error) { alert("Lỗi: " + error.message); }
+      await fetch(GV_API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      alert("🚀 Tuyệt vời! Đề đã được đẩy lên hệ thống thành công!");
+    } catch (error) { alert("❌ Lỗi kết nối: " + error.message); }
   };
-  // 3. Load danh sách GV từ server
+
+  // 4. LOAD DANH SÁCH & XÁC MINH (Giữ nguyên)
   useEffect(() => {
     const loadIdGv = async () => {
       try {
         const resp = await fetch(`${DANHGIA_URL}?action=getIdGvList`);
         const result = await resp.json();
-        if (result.status === 'success') {
-          setDsGiaoVien_gv(result.data);
-          console.log("✅ Danh sách GV đã nạp xong!");
-        }
-      } catch (err) {
-        console.error("❌ Lỗi fetch danh sách GV:", err);
-      } finally {
-        setLoading_gv(false);
-      }
+        if (result.status === 'success') setDsGiaoVien_gv(result.data);
+      } catch (err) { console.error("❌ Lỗi fetch GV:", err); }
+      finally { setLoading_gv(false); }
     };
     loadIdGv();
   }, []);
 
-  // 4. Hàm xác minh ID
   const handleVerify_gv = (idInput) => {
     if (loading_gv) return;
     const gvMatch = dsGiaoVien_gv.find(gv => String(gv.id) === String(idInput));
-    
     if (gvMatch) {
       setIsVerified_gv(true);
       setGvName_gv(gvMatch.name);
-      setConfig_gv(prev => ({ 
-        ...prev, 
-        idNumber_gv: idInput, 
-        imgURL_gv: gvMatch.img || "" 
-      }));
+      setConfig_gv(prev => ({ ...prev, idNumber_gv: idInput, imgURL_gv: gvMatch.img || "" }));
     } else {
       setIsVerified_gv(false);
-      alert("⚠️ ID này chưa được cấp quyền. Thầy liên hệ Admin: 0988.948.882 nhé!");
+      alert("⚠️ ID chưa được cấp quyền!");
     }
   };
-// Gửi dữ liệu cấu hình về sheet exams
- const handleSubmit_gv = async () => {
-  const idgv = config_gv.idNumber_gv?.trim();
-  const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL;
-
-  if (finalData_gv.length === 0) {
-    return alert("⚠️ Thầy chưa tải file Word hoặc file chưa được xử lý xong!");
-  }
-
-  const payload = {
-    action: "saveFullExam",
-    data: {
-      ...config_gv,
-      idNumber: idgv,
-      questions: finalData_gv // Bây giờ finalData_gv đã có dữ liệu rồi
-    }
-  };
-
-  try {
-    // Dùng POST để chuyển khối lượng dữ liệu lớn
-    const response = await fetch(GV_API_URL, {
-      method: 'POST',
-      mode: 'no-cors', // Dùng no-cors nếu Script của thầy chưa xử lý OPTIONS
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    alert("🚀 Tuyệt vời! Đã bắn thành công cấu hình và toàn bộ ngân hàng câu hỏi!");
-  } catch (error) {
-    alert("❌ Lỗi kết nối: " + error.message);
-  }
-};
   return (
     <div className="p-4 md:p-8 bg-white rounded-[3rem] shadow-xl max-w-7xl mx-auto my-6 border border-slate-50 animate-in fade-in zoom-in duration-300">
       {/* HEADER */}
