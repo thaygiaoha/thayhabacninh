@@ -1,5 +1,4 @@
 import { DANHGIA_URL, API_ROUTING } from '../config';
-import { DANHGIA_URL } from '../config';
 import React, { useState, useEffect } from 'react';
 
 interface ExamCreatorProps {
