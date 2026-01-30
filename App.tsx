@@ -11,7 +11,6 @@ import { getRandomQuizQuestion } from './questionquiz';
 import { AppProvider } from './contexts/AppContext';
 import AdminPanel from './components/AdminManager';
 import { fetchQuestionsBank } from './questions';
-import ExamCreator_gv from './components/ExamCreator_gv'; // Thầy nhớ check đúng tên file nhé
 
 const App: React.FC = () => {
   // Thêm 'admin' vào danh sách các View
@@ -113,7 +112,7 @@ useEffect(() => {
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="relative z-10">
             <h1 className="text-2xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-lg leading-tight">
-              HỆ THỐNG HỌC TẬP VÀ KIỂM TRA ONLINE <br className="md:hidden" /> MÔN TOÁN THPT
+              HỆ THỐNG HỌC TẬP VÀ KIỂM TRA ONLINE <br className="md:hidden" /> MÔN TOÁN
             </h1>
             <p className="text-sm md:text-lg opacity-90 font-black tracking-wide max-w-2xl mx-auto uppercase">
               Học tập chuyên nghiệp - Kết quả bứt phá
@@ -137,20 +136,12 @@ useEffect(() => {
     }}
   />
 )}
-             {currentView === 'admin' && (
-      adminMode === 'word' ? (
-        <ExamCreator_gv 
-          onBack_gv={goHome} 
-          // Truyền danh sách GV nếu thầy đã fetch ở App, 
-          // hoặc để ExamCreator_gv tự fetch như em hướng dẫn lúc nãy
-        />
-      ) : (
-        <AdminPanel 
-          mode={adminMode} 
-          onBack={goHome} 
-        />
-      )
-    )}
+              {currentView === 'admin' && (
+                <AdminPanel 
+              mode={adminMode} 
+              onBack={goHome} 
+              />
+                )}
               {currentView === 'portal' && selectedGrade && (
                 <ExamPortal grade={selectedGrade.toString()} onBack={goHome} onStart={handleStartExam} />
               )}
