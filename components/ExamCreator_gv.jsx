@@ -131,81 +131,33 @@ const handleFileUpload_gv = async (event) => {
         styleMap: ["u => u"]
       });
       const htmlContent = result.value;
-      
-      // 0. CHUẨN BỊ THÔNG SỐ ĐỊNH DANH (ID theo quy tắc của thầy)
-      const now = new Date();
-      const dateStr = "260130"; // Năm-Tháng-Ngày (Thầy có thể lấy động)
-      const grade = "10"; // Khối lớp
-      let stt = 1;
 
-      // 1. CHẶT FILE THÀNH 3 PHẦN LỚN (Xử lý cả số La Mã và số thường)
+      // 1. CHẶT FILE THÀNH 3 PHẦN ĐỂ KIỂM TRA
       const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
       const part1 = cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
       const part2 = cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
       const part3 = cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || "";
 
-      let finalRowsForSheet = [];
+      // 2. ĐẾM THỰC TẾ TRONG FILE
+      const c1 = part1.split(/Câu\s+\d+[:.]/gi).length - 1;
+      const c2 = part2.split(/Câu\s+\d+[:.]/gi).length - 1;
+      const c3 = part3.split(/Câu\s+\d+[:.]/gi).length - 1;
 
-      // --- PHẦN I: MCQ (Đóng gói mảng o, a) ---
-      const mcqRaw = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-      mcqRaw.forEach((q) => {
-        const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
-        const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
-        const optionsParts = content.split(/[A-D][\.\)]/gi);
-        const questionText = optionsParts[0].replace(/<\/?[^>]+(>|$)/g, "").trim();
-        const optionsArray = optionsParts.slice(1, 5).map(opt => opt.replace(/<\/?[^>]+(>|$)/g, "").trim());
-        const match = content.match(/[A-D][\.\)]\s*<u>(.*?)<\/u>/i) || content.match(/<u>(.*?)<\/u>/);
-        
-        const qJson = {
-          id: fullId, classTag: `${grade}01.a`, type: "mcq",
-          part: "PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn",
-          question: questionText, o: optionsArray,
-          a: match ? match[1].replace(/<\/?[^>]+(>|$)/g, "").trim() : ""
-        };
-        finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
-        stt++;
-      });
+      // 3. CHỈ THÔNG BÁO - KHÔNG TỰ Ý ĐIỀN VÀO FORM
+      alert(
+        `📊 KẾT QUẢ KIỂM TRA FILE WORD:\n` +
+        `--------------------------------\n` +
+        `✅ Phần I (MCQ): ${c1} câu\n` +
+        `✅ Phần II (Đúng/Sai): ${c2} câu\n` +
+        `✅ Phần III (Trả lời ngắn): ${c3} câu\n\n` +
+        `👉 Thầy/Cô vui lòng kiểm tra xem đã khớp với số lượng nhập ở trên chưa nhé!`
+      );
 
-      // --- PHẦN II: TF (Đóng gói Đúng/Sai) ---
-      const tfRaw = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-      tfRaw.forEach((q) => {
-        const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
-        const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
-        const correctOnes = [...content.matchAll(/<u>(.*?)<\/u>/gi)].map(m => m[1].replace(/<\/?[^>]+(>|$)/g, "").trim());
-        
-        const qJson = {
-          id: fullId, classTag: `${grade}01.b`, type: "true-false",
-          part: "PHẦN II. Câu hỏi trắc nghiệm đúng sai",
-          question: content.replace(/<u>(.*?)<\/u>/gi, "$1").trim(), // Nội dung giữ text, bỏ gạch chân
-          s: correctOnes // Mảng các ý đúng
-        };
-        finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
-        stt++;
-      });
-
-      // --- PHẦN III: SA (Trả lời ngắn) ---
-      const saRaw = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
-      saRaw.forEach((q) => {
-        const fullId = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
-        const [content, lg] = q.split(/Hướng dẫn giải:|Lời giải:|LG:/i);
-        const keyMatch = content.match(/Key=(.*?)>/i);
-        
-        const qJson = {
-          id: fullId, classTag: `${grade}01.c`, type: "short-answer",
-          part: "PHẦN III. Câu hỏi trắc nghiệm trả lời ngắn",
-          question: content.split(/Key=/i)[0].trim(),
-          a: keyMatch ? keyMatch[1].trim() : ""
-        };
-        finalRowsForSheet.push([fullId, qJson.classTag, JSON.stringify(qJson), new Date(), JSON.stringify({id: fullId, loigiai: (lg || "").trim()})]);
-        stt++;
-      });
-
-      // 2. CẬP NHẬT GIAO DIỆN VÀ CHỜ LỆNH ĐẨY SHEET
-      setFinalData_gv(finalRowsForSheet); // Lưu mảng 1000 câu vào State
-      alert(`🚀 "Máy nghiền" đã xong ${finalRowsForSheet.length} câu!\nSẵn sàng đẩy lên sheet(exam_data).`);
+      // (Vẫn giữ finalRowsForSheet nếu thầy muốn lưu tạm dữ liệu để Admin dùng)
+      // setFinalData_gv(finalRowsForSheet); 
 
     } catch (err) {
-      alert("Lỗi: " + err.message);
+      alert("⚠️ Lỗi đọc file: " + err.message);
     }
   };
   reader.readAsArrayBuffer(file);
