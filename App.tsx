@@ -138,8 +138,10 @@ setView={(mode: any) => {
     // Nếu là Admin vào quản lý hệ thống
     setAdminMode(mode);
     setCurrentView('admin');
-  }
-}}
+ }
+    }} // <--- Đóng hàm setView
+  /> // <--- Đóng thẻ LandingPage
+)} // <--- Đóng điều kiện {currentView === 'landing' && (
               {currentView === 'admin' && (
                 <AdminPanel 
               mode={adminMode} 
