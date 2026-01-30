@@ -9,7 +9,7 @@ interface LandingPageProps {
   user: AppUser | null;
   onOpenAuth: () => void;
   onOpenVip: () => void;
-  setView: (mode: 'cauhoi' | 'word') => void;
+  setView: : (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
 }
 interface UserAcc {
   phoneNumber: string;
@@ -21,7 +21,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   user,
   onOpenAuth,
   onOpenVip,
-  setView: (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
+  setView
 }) => {
   // --- GIỮ NGUYÊN TOÀN BỘ LOGIC DỮ LIỆU CỦA THẦY ---
   const REDIRECT_LINKS: Record<string, string> = { "default": "https://www.facebook.com/hoctoanthayha.bg" };
