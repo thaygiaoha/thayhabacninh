@@ -120,55 +120,58 @@ useEffect(() => {
           </div>
         </header>
 
-        <main className="flex-grow max-w-[1400px] mx-auto w-full p-4 md:p-10">
-          <div className="flex flex-col gap-6">
-            {currentView === 'landing' && (
-  <LandingPage 
-    user={user} 
-    onOpenAuth={() => setShowAuth(true)} 
-    onOpenVip={() => user ? setShowVipModal(true) : setShowAuth(true)}
-    onSelectGrade={(grade) => { setSelectedGrade(grade); setCurrentView('portal'); }} 
-    onSelectQuiz={handleStartQuizMode}
-setView={(mode: any) => { 
-  if (mode === 'word' || mode === 'matran') { 
-    // Nếu là Giáo viên tạo đề hoặc làm Ma trận
-    setCurrentView('word'); 
-    setAdminMode(mode); 
-  } else {
-    // Nếu là Admin vào quản lý hệ thống
-    setAdminMode(mode);
-    setCurrentView('admin');
- }
-    }} // <--- Đóng hàm setView
-  /> // <--- Đóng thẻ LandingPage
-)} // <--- Đóng điều kiện {currentView === 'landing' && (
-              {currentView === 'admin' && (
-                <AdminPanel 
-              mode={adminMode} 
-              onBack={goHome} 
-              />
-                )}
-               {/* Mở thêm view cho Giáo viên theo yêu cầu */}
-            {currentView === 'word' && (
-          <ExamCreatorGV onBack={goHome} />
-          )}
-              {currentView === 'portal' && selectedGrade && (
-                <ExamPortal grade={selectedGrade.toString()} onBack={goHome} onStart={handleStartExam} />
-              )}
-              {currentView === 'quiz' && activeExam && activeStudent && (
-                <QuizInterface 
-                  config={activeExam} 
-                  student={activeStudent} 
-                  questions={questions} 
-                  onFinish={handleFinishExam} 
-                  isQuizMode={activeExam.id === 'QUIZ'}
-                />
-              )}
-              {currentView === 'result' && examResult && (
-                <ResultView result={examResult} questions={questions} onBack={goHome} />
-              )}
-          </div>
-        </main>
+       <main className="flex-grow max-w-[1400px] mx-auto w-full p-4 md:p-10">
+  <div className="flex flex-col gap-6">
+    {/* 1. VIEW TRANG CHỦ */}
+    {currentView === 'landing' && (
+      <LandingPage 
+        user={user} 
+        onOpenAuth={() => setShowAuth(true)} 
+        onOpenVip={() => user ? setShowVipModal(true) : setShowAuth(true)}
+        onSelectGrade={(grade) => { setSelectedGrade(grade); setCurrentView('portal'); }} 
+        onSelectQuiz={handleStartQuizMode}
+        setView={(mode: any) => { 
+          if (mode === 'word' || mode === 'matran') { 
+            setCurrentView('word'); 
+            setAdminMode(mode); 
+          } else {
+            setAdminMode(mode);
+            setCurrentView('admin');
+          }
+        }} 
+      />
+    )}
+
+    {/* 2. VIEW ADMIN (Tách biệt hoàn toàn) */}
+    {currentView === 'admin' && (
+      <AdminPanel mode={adminMode} onBack={goHome} />
+    )}
+
+    {/* 3. VIEW GIÁO VIÊN (Tách biệt hoàn toàn) */}
+    {currentView === 'word' && (
+      <ExamCreatorGV onBack={goHome} />
+    )}
+
+    {/* 4. CÁC VIEW CÒN LẠI */}
+    {currentView === 'portal' && selectedGrade && (
+      <ExamPortal grade={selectedGrade.toString()} onBack={goHome} onStart={handleStartExam} />
+    )}
+    
+    {currentView === 'quiz' && activeExam && activeStudent && (
+      <QuizInterface 
+        config={activeExam} 
+        student={activeStudent} 
+        questions={questions} 
+        onFinish={handleFinishExam} 
+        isQuizMode={activeExam.id === 'QUIZ'}
+      />
+    )}
+
+    {currentView === 'result' && examResult && (
+      <ResultView result={examResult} questions={questions} onBack={goHome} />
+    )}
+  </div>
+</main>
 
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); }} />}
         {showVipModal && <VipModal user={user!} onClose={() => setShowVipModal(false)} onSuccess={() => { setUser(prev => prev ? {...prev, isVip: true} : null); setShowVipModal(false); }} />}
