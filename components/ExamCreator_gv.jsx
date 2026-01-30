@@ -1,8 +1,11 @@
 import { DANHGIA_URL, API_ROUTING } from '../config';
 import { AppUser, Student } from '../types';
 import React, { useState, useEffect } from 'react';
+interface ExamCreatorProps {
+  onBack_gv: () => void;
+}
 
-const ExamCreator_gv = ({ onBack_gv, idgvAdmin_gv }) => {
+const ExamCreator_gv: React.FC<ExamCreatorProps> = ({ onBack_gv }) => {
   // State quản lý trạng thái xác minh
   const [isVerified_gv, setIsVerified_gv] = useState(false);
   const [gvName_gv, setGvName_gv] = useState("");
