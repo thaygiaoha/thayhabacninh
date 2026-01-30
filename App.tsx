@@ -11,7 +11,7 @@ import { getRandomQuizQuestion } from './questionquiz';
 import { AppProvider } from './contexts/AppContext';
 import AdminPanel from './components/AdminManager';
 import { fetchQuestionsBank } from './questions';
-import ExamCreator_gv from './components/ExamCreator'; // Thầy nhớ check đúng tên file nhé
+import ExamCreator_gv from './components/ExamCreator_gv'; // Thầy nhớ check đúng tên file nhé
 
 const App: React.FC = () => {
   // Thêm 'admin' vào danh sách các View
