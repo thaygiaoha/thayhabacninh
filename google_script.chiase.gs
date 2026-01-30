@@ -1,7 +1,7 @@
 /**
  * CẤU HÌNH HỆ THỐNG
  */
-const SPREADSHEET_ID = "ID google của thầy cô"; // trong link có dạng: https://docs.google.com/spreadsheets/d/ID thầy cô đây nhé/edit...
+const SPREADSHEET_ID = "16w4EzHhTyS1CnTfJOWE7QQNM0o2mMQIqePpPK8TEYrg";
 const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 /*************************************************
  * HÀM TIỆN ÍCH: TẠO RESPONSE JSON
@@ -232,6 +232,7 @@ if (action === "getRouting") {
         var jsonText = raw.replace(/(\w+)\s*:/g, '"$1":').replace(/'/g, '"');
         var obj = JSON.parse(jsonText);
         if (!obj.classTag) obj.classTag = rows[i][1];
+        obj.loigiai = rows[i][4] || "";
         questions.push(obj);
       } catch (e) {}
     }
