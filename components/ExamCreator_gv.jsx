@@ -99,56 +99,46 @@ const handleFileUpload_gv = async (event) => {
       alert("⚠️ ID này chưa được cấp quyền. Thầy liên hệ Admin: 0988.948.882 nhé!");
     }
   };
-
+// Gửi dữ liệu cấu hình về sheet exams
   const handleSubmit_gv = async () => {
-  // 1. Kiểm tra điều kiện cần
-  if (!isVerified_gv) return alert("⚠️ Thầy/Cô cần xác minh ID trước khi đẩy đề!");
-  if (!config_gv.exams_gv) return alert("⚠️ Vui lòng nhập tên mã đề thi!");
-  if (config_gv.mcqCount_gv === 0 && config_gv.tfCount_gv === 0 && config_gv.saCount_gv === 0) {
-    return alert("⚠️ Hệ thống chưa nhận diện được câu hỏi nào từ file Word!");
+  // 1. Kiểm tra ID và lấy URL riêng của giáo viên
+  const idgv = config_gv.idNumber_gv?.trim();
+  const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL; // Lấy link riêng, không có thì dùng default
+
+  if (!isVerified_gv || !config_gv.exams_gv) {
+    return alert("⚠️ Thầy kiểm tra lại ID và Tên đề nhé!");
   }
 
-  // 2. Thông báo trạng thái đang xử lý
-  const btn = document.getElementById('btnSubmit_gv');
-  if(btn) btn.innerText = "🚀 ĐANG ĐẨY DỮ LIỆU...";
+  // Tạo đối tượng URL để quản lý Params cho chuyên nghiệp
+  const url = new URL(GV_API_URL);
+  url.searchParams.append("action", "saveExamConfig");
+  url.searchParams.append("exams", config_gv.exams_gv);
+  url.searchParams.append("idNumber", idgv);
+  url.searchParams.append("fulltime", config_gv.fulltime_gv);
+  url.searchParams.append("mintime", config_gv.mintime_gv);
+  url.searchParams.append("tab", config_gv.tab_gv);
+  url.searchParams.append("close", config_gv.close_gv);
+  url.searchParams.append("imgURL", config_gv.imgURL_gv);
+  url.searchParams.append("mcqCount", config_gv.mcqCount_gv);
+  url.searchParams.append("mcqScore", config_gv.mcqScore_gv);
+  url.searchParams.append("tfCount", config_gv.tfCount_gv);
+  url.searchParams.append("tfScore", config_gv.tfScore_gv);
+  url.searchParams.append("saCount", config_gv.saCount_gv);
+  url.searchParams.append("saScore", config_gv.saScore_gv);
 
   try {
-    // 3. Gửi dữ liệu sang Google Apps Script
-    // Thầy nhớ khai báo DANHGIA_URL trong file config.js nhé
-    const response = await fetch(`${DANHGIA_URL}`, {
-      method: 'POST',
-      mode: 'no-cors', // Quan trọng để tránh lỗi CORS khi gọi Script Google
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'saveExamConfig', // Action này thầy xử lý trong file .gs
-        payload: {
-          exams: config_gv.exams_gv,       // Cột A
-          idNumber: config_gv.idNumber_gv, // Cột B
-          fulltime: config_gv.fulltime_gv, // Cột C
-          mintime: config_gv.mintime_gv,   // Cột D
-          tab: config_gv.tab_gv,           // Cột E
-          close: config_gv.close_gv,       // Cột F
-          imgURL: config_gv.imgURL_gv,     // Cột G
-          mcqCount: config_gv.mcqCount_gv, // Cột H
-          mcqScore: config_gv.mcqScore_gv, // Cột I
-          tfCount: config_gv.tfCount_gv,   // Cột J
-          tfScore: config_gv.tfScore_gv,   // Cột K
-          saCount: config_gv.saCount_gv,   // Cột L
-          saScore: config_gv.saScore_gv    // Cột M
-        }
-      })
+    // Await fetch cực gọn theo đúng style thầy thích
+    const response = await fetch(url.toString(), { 
+      method: 'GET', // Hoặc POST tùy thầy cấu hình ở Apps Script
+      mode: 'no-cors' 
     });
 
-    alert("🎉 CHÚC MỪNG! Đề thi đã được khởi tạo thành công trên hệ thống.");
-    if(btn) btn.innerText = "BẮT ĐẦU ĐẨY ĐỀ LÊN HỆ THỐNG";
+    alert(`🚀 Đã "bắn" đề lên hệ thống của thầy ${idgv} thành công!`);
     
   } catch (error) {
-    console.error("Lỗi submit:", error);
-    alert("❌ Có lỗi xảy ra khi kết nối với máy chủ!");
-    if(btn) btn.innerText = "THỬ LẠI NGAY";
+    alert("❌ Lỗi rồi thầy/ cô ơi, kiểm tra lại kết nối mạng nhé!");
   }
 };
-
   return (
     <div className="p-4 md:p-8 bg-white rounded-[3rem] shadow-xl max-w-7xl mx-auto my-6 border border-slate-50 animate-in fade-in zoom-in duration-300">
       {/* HEADER */}
