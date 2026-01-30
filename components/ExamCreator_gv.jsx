@@ -239,6 +239,46 @@ const onChangeExams_gv = (key, value) => {
     setLoading_gv(false);
   }
 };
+// ===============save all ==============
+  const saveAll_gv = async () => {
+  if (!questions.length || !exams_gv.Exams) {
+    alert("Thiếu mã đề hoặc chưa upload file Word thầy ơi!");
+    return;
+  }
+
+  setLoading_gv(true);
+  try {
+    // Tự động đếm số lượng câu theo từng loại trước khi gửi
+    const mcq = questions.filter(q => q.part === "I").length;
+    const tf = questions.filter(q => q.part === "II").length;
+    const sa = questions.filter(q => q.part === "III").length;
+
+    const payload = {
+      action: "saveFullExam",
+      examConfig: { 
+        ...exams_gv, 
+        IdNumber: idgv_gv,
+        MCQ: mcq, TF: tf, SA: sa 
+      },
+      examQuestions: normalizeQuestions_gv(questions)
+    };
+
+    const res = await fetch(apiGV_gv, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }).then(r => r.text());
+
+    if (res === "OK") {
+      alert("🚀 Đã lưu toàn bộ đề và cấu hình thành công!");
+    } else {
+      alert("❌ Lỗi: " + res);
+    }
+  } catch (err) {
+    alert("❌ Lỗi kết nối: " + err.message);
+  } finally {
+    setLoading_gv(false);
+  }
+};
 
 
   // ================== RENDER ==================
@@ -278,6 +318,24 @@ const onChangeExams_gv = (key, value) => {
           </h2>
 
           <input type="file" accept=".docx" onChange={handleUpload_gv} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-2xl">
+  <div>
+    <label className="block text-xs font-bold mb-1">Mã đề (Exams)</label>
+    <input className="w-full p-2 border rounded-lg" value={exams_gv.Exams} onChange={(e) => onChangeExams_gv("Exams", e.target.value)} placeholder="VD: 1201" />
+  </div>
+  <div>
+    <label className="block text-xs font-bold mb-1">Thời gian (Phút)</label>
+    <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.fulltime} onChange={(e) => onChangeExams_gv("fulltime", e.target.value)} />
+  </div>
+  <div>
+    <label className="block text-xs font-bold mb-1">Thoát Tab tối đa</label>
+    <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.tab} onChange={(e) => onChangeExams_gv("tab", e.target.value)} />
+  </div>
+  <div>
+    <label className="block text-xs font-bold mb-1">Link Folder Ảnh</label>
+    <input className="w-full p-2 border rounded-lg" value={exams_gv.imgURL} onChange={(e) => onChangeExams_gv("imgURL", e.target.value)} placeholder="Dán link Drive" />
+  </div>
+</div>
 
           <div className="flex gap-4">
             <button
