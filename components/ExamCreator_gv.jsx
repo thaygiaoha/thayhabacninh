@@ -40,24 +40,126 @@ export default function ExamCreator_gv() {
 
   // ================== UPLOAD WORD ==================
   const handleUpload_gv = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const file = e.target.files[0];
+  const reader = new FileReader();
 
-    const arrayBuffer = await file.arrayBuffer();
+  reader.onload = async (event) => {
+    const arrayBuffer = event.target.result;
+    let tempImages = []; 
+    let imageCounter = 0;
 
-    const result = await mammoth.convertToHtml(
-      { arrayBuffer },
-      {
-        convertImage: mammoth.images.inline((image) =>
-          image.read("base64").then((imageBuffer) => ({
-            src: `data:${image.contentType};base64,${imageBuffer}`,
-          }))
-        ),
-      }
-    );
+    // 1. Cấu hình Mammoth để bóc LaTeX hoặc để lại Placeholder ảnh
+    const options = {
+      convertImage: mammoth.images.inline((element) => {
+        return element.read("base64").then((imageBuffer) => {
+          const latex = convertMathTypeToBase64(imageBuffer);
+          
+          if (latex) {
+            // Trả về alt chứa LaTeX
+            return { src: "", alt: latex }; 
+          } else {
+            imageCounter++;
+            const placeholder = `[[IMG_DRIVE_${imageCounter}]]`;
+            tempImages.push({
+              placeholder: placeholder,
+              base64: imageBuffer,
+              type: element.contentType
+            });
+            return { src: placeholder, alt: "hinh_ve" };
+          }
+        });
+      })
+    };
 
-    parseExam_gv(result.value);
+    // 2. Chuyển Word sang HTML
+    const result = await mammoth.convertToHtml({ arrayBuffer }, options);
+    let html = result.value;
+
+    // --- VỊ TRÍ GẮN LỆNH CỦA THẦY ĐÂY ---
+    // Lệnh này quét lại toàn bộ HTML, chỗ nào là <img> có alt LaTeX thì biến thành chữ thuần
+    html = html.replace(/<img[^>]+alt="([^"]+)"[^>]*>/g, (match, alt) => {
+      return alt === "hinh_ve" ? match : alt; 
+    });
+    // ------------------------------------
+
+    // 3. Sau đó mới gọi hàm xử lý ảnh Drive và chia câu
+    processAndUpload_gv(html, tempImages);
   };
+  reader.readAsArrayBuffer(file);
+};
+  // ============
+  const uploadRes = await fetch(apiGV_gv, {
+  method: "POST",
+  body: JSON.stringify({
+    action: "uploadImagesToDrive", // KHỚP Ở ĐÂY
+    folderId: exams_gv.imgURL,      // Link folder Drive từ Form
+    images: imageList               // Mảng ảnh base64 đã bóc từ Word
+  })
+}).then(r => r.json());
+  // =========== xử lý ảnh ==============
+  const processAndUpload_gv = async (rawHtml, tempImages) => {
+  setLoading_gv(true);
+  let finalHtml = rawHtml;
+
+  // --- BƯỚC 1: ĐẶT TÊN ẢNH CHUẨN ---
+  // Giả sử ta bóc được danh sách câu hỏi trước để biết ảnh nằm ở câu nào
+  // Tạm thời dùng Regex để tìm vị trí placeholder ảnh trong nội dung
+  const dateStr = "300126"; // Thầy có thể lấy động: new Date().toLocaleDateString('en-GB').replace(/\//g, '')
+  
+  const updatedImages = tempImages.map((img, index) => {
+    // Logic đặt tên của thầy: MaDe.Ngay.Cau.STT_Anh
+    // Vì lúc này chưa chia câu hoàn toàn, ta tạm đặt theo STT quét được
+    // Sau khi parse câu, ta sẽ map lại chính xác hơn
+    const newName = `${exams_gv.Exams}.${dateStr}.${img.cauIndex || 'tmp'}.${img.sttTrongCau || index + 1}`;
+    return { ...img, name: newName };
+  });
+
+  try {
+    // --- BƯỚC 2: ĐẨY LÊN DRIVE ---
+    const uploadRes = await fetch(apiGV_gv, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "uploadImagesToDrive",
+        folderId: exams_gv.imgURL,
+        images: updatedImages
+      })
+    }).then(r => r.json());
+
+    if (uploadRes.status === "success") {
+      // --- BƯỚC 3: THAY LINK VÀO HTML ---
+      Object.keys(uploadRes.links).forEach(placeholder => {
+        finalHtml = finalHtml.replace(placeholder, uploadRes.links[placeholder]);
+      });
+
+      // --- BƯỚC 4: CHIA CÂU HỎI (BẢN NÂNG CẤP) ---
+      // Sau khi có HTML sạch link Drive, ta mới split câu
+      const parsedQuestions = parseQuestionsFromHtml_gv(finalHtml); 
+      setQuestions(parsedQuestions);
+      alert("Đã bóc tách xong và lưu ảnh vào Drive!");
+    }
+  } catch (err) {
+    alert("Lỗi xử lý ảnh: " + err.message);
+  } finally {
+    setLoading_gv(false);
+  }
+};
+  // ======== xử lý mathtype ==========
+  const convertMathTypeToBase64 = (base64Str) => {
+  // Giải mã base64 sang chuỗi nhị phân
+  const binary = atob(base64Str);
+  
+  // Tìm kiếm từ khóa "MathType" hoặc cấu trúc MTEF trong metadata của ảnh
+  // Thông thường MathType lưu LaTeX sau chuỗi "Equation Native" hoặc trong Alt text
+  // Ở đây em dùng Regex để bắt các ký tự đặc trưng của LaTeX trong WMF
+  const latexMatch = binary.match(/(\$|\\begin\{equation\}|\\\[)(.*?)(\$|\\end\{equation\}|\\\])/);
+  
+  if (latexMatch) {
+    return latexMatch[0]; // Trả về đoạn mã LaTeX: e.g. $\frac{a}{b}$
+  }
+  
+  // Nếu không tìm thấy LaTeX trực tiếp, ta trả về null để hệ thống coi nó là ảnh bình thường (hình vẽ)
+  return null;
+};
 
   // ================== PARSE ĐỀ WORD ==================
   const parseExam_gv = (html) => {
