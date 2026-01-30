@@ -215,42 +215,29 @@ const handleFileUpload_gv = async (event) => {
   };
 // Gửi dữ liệu cấu hình về sheet exams
   const handleSubmit_gv = async () => {
-  // 1. Kiểm tra ID và lấy URL riêng của giáo viên
   const idgv = config_gv.idNumber_gv?.trim();
-  const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL; // Lấy link riêng, không có thì dùng default
+  const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL;
 
-  if (!isVerified_gv || !config_gv.exams_gv) {
-    return alert("⚠️ Thầy kiểm tra lại ID và Tên đề nhé!");
-  }
-
-  // Tạo đối tượng URL để quản lý Params cho chuyên nghiệp
-  const url = new URL(GV_API_URL);
-  url.searchParams.append("action", "saveExamConfig");
-  url.searchParams.append("exams", config_gv.exams_gv);
-  url.searchParams.append("idNumber", idgv);
-  url.searchParams.append("fulltime", config_gv.fulltime_gv);
-  url.searchParams.append("mintime", config_gv.mintime_gv);
-  url.searchParams.append("tab", config_gv.tab_gv);
-  url.searchParams.append("close", config_gv.close_gv);
-  url.searchParams.append("imgURL", config_gv.imgURL_gv);
-  url.searchParams.append("mcqCount", config_gv.mcqCount_gv);
-  url.searchParams.append("mcqScore", config_gv.mcqScore_gv);
-  url.searchParams.append("tfCount", config_gv.tfCount_gv);
-  url.searchParams.append("tfScore", config_gv.tfScore_gv);
-  url.searchParams.append("saCount", config_gv.saCount_gv);
-  url.searchParams.append("saScore", config_gv.saScore_gv);
+  // Đóng gói tất cả vào một gói quà
+  const payload = {
+    action: "saveFullExam",
+    data: {
+      ...config_gv,
+      exams: config_gv.exams_gv,
+      idNumber: idgv,
+      fulltime: config_gv.fulltime_gv,
+      questions: finalData_gv // Đây chính là 1000 câu thầy đã "nghiền"
+    }
+  };
 
   try {
-    // Await fetch cực gọn theo đúng style thầy thích
-    const response = await fetch(url.toString(), { 
-      method: 'GET', // Hoặc POST tùy thầy cấu hình ở Apps Script
-      mode: 'no-cors' 
+    const response = await fetch(GV_API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
     });
-
-    alert(`🚀 Đã "bắn" đề lên hệ thống của thầy ${idgv} thành công!`);
-    
+    alert("🎉 Đã đẩy thành công 13 cột sang Exams và toàn bộ câu hỏi sang exam_data!");
   } catch (error) {
-    alert("❌ Lỗi rồi thầy/ cô ơi, kiểm tra lại kết nối mạng nhé!");
+    alert("❌ Lỗi rồi thầy ơi, dữ liệu lớn quá nên POST mới chịu được!");
   }
 };
   return (
