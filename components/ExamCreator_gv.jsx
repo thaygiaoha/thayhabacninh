@@ -14,44 +14,40 @@ const handleFileUpload_gv = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  // Hiển thị trạng thái đang đọc file cho GV yên tâm
-  console.log("正在读取文件..."); 
-  
   const reader = new FileReader();
   reader.onload = async (e) => {
     const arrayBuffer = e.target.result;
     try {
-      // 1. Chuyển Word sang Text để phân tích
       const result = await mammoth.extractRawText({ arrayBuffer });
       const text = result.value;
 
-      // 2. Bộ lọc Regex nhận diện (Cực chuẩn cho đề Toán)
-      // Nhận diện Câu 1, Câu 2...
-      const mcqMatches = text.match(/Câu\s+\d+[:.]/gi) || [];
+      // Logic bóc tách "đặc sản" đề Toán của thầy Hà
+      const tfCount = (text.match(/\[TF\]|Chọn\s+đúng\s+hoặc\s+sai/gi) || []).length;
+      const saCount = (text.match(/\[SA\]|Trả\s+lời\s+ngắn|Điền\s+đáp\s+số/gi) || []).length;
+      const totalQuestions = (text.match(/Câu\s+\d+[:.]/gi) || []).length;
       
-      // Nhận diện câu Đúng/Sai (Dựa trên từ khóa hoặc định dạng [TF])
-      const tfMatches = text.match(/Chọn\s+đúng\s+hoặc\s+sai|\[TF\]/gi) || [];
+      // Số câu MCQ = Tổng số câu trừ đi các câu loại đặc biệt
+      const mcqCount = Math.max(0, totalQuestions - tfCount - saCount);
 
-      // Nhận diện Trả lời ngắn (Dựa trên từ khóa [SA] hoặc "Câu ... trả lời")
-      const saMatches = text.match(/\[SA\]|Điền\s+đáp\s+số/gi) || [];
-
-      // 3. Cập nhật State để giao diện tự nhảy số
+      // Cập nhật State một phát ăn ngay 3 cột
       setConfig_gv(prev => ({
         ...prev,
-        mcqCount_gv: mcqMatches.length - tfMatches.length - saMatches.length, // Trừ đi các câu đặc biệt
-        tfCount_gv: tfMatches.length,
-        saCount_gv: saMatches.length
+        mcqCount_gv: mcqCount,
+        tfCount_gv: tfCount,
+        saCount_gv: saCount,
+        // Tự động gán điểm mặc định nếu thầy muốn (ví dụ 10 điểm chia đều)
+        mcqScore_gv: mcqCount > 0 ? 3.0 : 0, 
+        tfScore_gv: tfCount > 0 ? 4.0 : 0,
+        saScore_gv: saCount > 0 ? 3.0 : 0
       }));
 
-      alert(`🚀 Phân tích xong!\n- Trắc nghiệm: ${mcqMatches.length - tfMatches.length - saMatches.length} câu\n- Đúng/Sai: ${tfMatches.length} câu\n- Trả lời ngắn: ${saMatches.length} câu`);
-
+      console.log("✅ Phân tích đề thành công!");
     } catch (err) {
-      alert("❌ Lỗi: Không thể đọc file Word. Thầy kiểm tra lại file .docx nhé!");
+      alert("Lỗi đọc file Word rồi thầy ơi!");
     }
   };
   reader.readAsArrayBuffer(file);
 };
-
   // 2. Quản lý cấu hình đề thi (Khớp các cột A-M trong Sheet Exams)
   const [config_gv, setConfig_gv] = useState({
     exams_gv: '',       // Cột A
