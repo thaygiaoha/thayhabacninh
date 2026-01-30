@@ -122,20 +122,24 @@ useEffect(() => {
 
         <main className="flex-grow max-w-[1400px] mx-auto w-full p-4 md:p-10">
           <div className="flex flex-col gap-6">
-             {currentView === 'landing' && (
+            {currentView === 'landing' && (
   <LandingPage 
     user={user} 
     onOpenAuth={() => setShowAuth(true)} 
     onOpenVip={() => user ? setShowVipModal(true) : setShowAuth(true)}
     onSelectGrade={(grade) => { setSelectedGrade(grade); setCurrentView('portal'); }} 
     onSelectQuiz={handleStartQuizMode}
-    // SỬA DÒNG NÀY: Đảm bảo set đúng mode được truyền từ LandingPage sang
-    setView={(mode: any) => { 
-      setAdminMode(mode); 
-      setCurrentView('admin'); 
-    }}
-  />
-)}
+setView={(mode: any) => { 
+  if (mode === 'word' || mode === 'matran') { 
+    // Nếu là Giáo viên tạo đề hoặc làm Ma trận
+    setCurrentView('word'); 
+    setAdminMode(mode); 
+  } else {
+    // Nếu là Admin vào quản lý hệ thống
+    setAdminMode(mode);
+    setCurrentView('admin');
+  }
+}}
               {currentView === 'admin' && (
                 <AdminPanel 
               mode={adminMode} 
