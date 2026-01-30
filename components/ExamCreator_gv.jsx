@@ -3,7 +3,7 @@ import { DANHGIA_URL, API_ROUTING } from "../config";
 import mammoth from "mammoth";
 // import ExamForm_gv from "./ExamForm_gv"; // nhớ tạo hoặc comment tạm
 
-export default function ExamCreator() {
+export default function ExamCreator_gv() {
   const [html, setHtml] = useState("");
   const [questions, setQuestions] = useState([]);
 
@@ -166,3 +166,4 @@ export default function ExamCreator() {
     </div>
   );
 }
+export default ExamCreator_gv;
