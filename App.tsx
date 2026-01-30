@@ -142,6 +142,10 @@ useEffect(() => {
               onBack={goHome} 
               />
                 )}
+               {/* Mở thêm view cho Giáo viên theo yêu cầu */}
+            {currentView === 'word' && (
+          <ExamCreatorGV onBack={goHome} />
+          )}
               {currentView === 'portal' && selectedGrade && (
                 <ExamPortal grade={selectedGrade.toString()} onBack={goHome} onStart={handleStartExam} />
               )}
