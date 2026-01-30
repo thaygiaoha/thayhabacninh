@@ -1,18 +1,15 @@
 import { DANHGIA_URL, API_ROUTING } from '../config';
-import React, { useState, useEffect } from 'react';
 
-interface ExamCreatorProps {
-  onBack_gv: () => void;
-}
+import React, { useState, useEffect } from 'react';
 
 const ExamCreator_gv = ({ onBack_gv }) => {
   // 1. Quản lý trạng thái xác minh
   const [isVerified_gv, setIsVerified_gv] = useState(false);
   const [gvName_gv, setGvName_gv] = useState("");
-  const [dsGiaoVien_gv, setDsGiaoVien_gv] = useState<any[]>([]);
+  const [dsGiaoVien_gv, setDsGiaoVien_gv] = useState([]);
   const [loading_gv, setLoading_gv] = useState(true);
 
-  // 2. Quản lý cấu hình đề thi (Khớp các cột A-M)
+  // 2. Quản lý cấu hình đề thi (Khớp các cột A-M trong Sheet Exams)
   const [config_gv, setConfig_gv] = useState({
     exams_gv: '',       // Cột A
     idNumber_gv: '',    // Cột B
@@ -26,7 +23,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
     saCount_gv: 0, saScore_gv: 0    // L, M
   });
 
-  // 3. Load danh sách GV từ server ngay khi mở
+  // 3. Load danh sách GV từ server
   useEffect(() => {
     const loadIdGv = async () => {
       try {
@@ -34,7 +31,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
         const result = await resp.json();
         if (result.status === 'success') {
           setDsGiaoVien_gv(result.data);
-          console.log("✅ Danh sách GV đã sẵn sàng!");
+          console.log("✅ Danh sách GV đã nạp xong!");
         }
       } catch (err) {
         console.error("❌ Lỗi fetch danh sách GV:", err);
@@ -67,7 +64,6 @@ const ExamCreator_gv = ({ onBack_gv }) => {
   const handleSubmit_gv = async () => {
     if (!isVerified_gv) return alert("Thầy/cô cần xác minh ID trước!");
     console.log("Dữ liệu chuẩn bị gửi đi:", config_gv);
-    // Phần fetch POST đẩy đề lên sẽ xử lý ở bước sau
   };
 
   return (
