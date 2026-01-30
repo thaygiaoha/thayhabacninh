@@ -99,7 +99,6 @@ export interface NewsItem {
   title: string;
   link: string;
 }
-declare module 'mammoth';
 
 export interface AppUser {
   phoneNumber: string;
