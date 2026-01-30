@@ -3,177 +3,101 @@ import { DANHGIA_URL, API_ROUTING } from "../config";
 import mammoth from "mammoth";
 
 export default function ExamCreator_gv() {
-  // ================== STATE CHUNG ==================
   const [questions, setQuestions] = useState([]);
-
-  // ================== XÁC MINH GV ==================
   const [verified_gv, setVerified_gv] = useState(false);
   const [idgv_gv, setIdgv_gv] = useState("");
   const [gvInfo_gv, setGvInfo_gv] = useState(null);
   const [loading_gv, setLoading_gv] = useState(false);
   const [error_gv, setError_gv] = useState("");
 
+  const [exams_gv, setExams_gv] = useState({
+    Exams: "", IdNumber: "", fulltime: 45, mintime: 10,
+    tab: 0, close: 0, imgURL: "",
+    MCQ: 0, scoremcq: 0, TF: 0, scoretf: 0, SA: 0, scoresa: 0
+  });
+
   const apiGV_gv = verified_gv ? API_ROUTING[idgv_gv] : null;
 
-  const verifyGV_gv = async () => {
-    if (!idgv_gv) return;
-
-    setLoading_gv(true);
-    setError_gv("");
-
-    const res = await fetch(`${DANHGIA_URL}?action=verifyGV_gv`, {
-      method: "POST",
-      body: JSON.stringify({
-        idgv: idgv_gv,
-      }),
-    }).then((r) => r.json());
-
-    setLoading_gv(false);
-
-    if (res.status === "success") {
-      setVerified_gv(true);
-      setGvInfo_gv(res.data);
-    } else {
-      setError_gv("ID giáo viên không tồn tại hoặc đã bị khóa");
-    }
+  const onChangeExams_gv = (key, value) => {
+    setExams_gv(prev => ({ ...prev, [key]: value }));
   };
 
-  // ================== UPLOAD WORD ==================
+  // --- MATHTYPE & IMAGE LOGIC ---
+  const convertMathTypeToBase64 = (base64Str) => {
+    const binary = atob(base64Str);
+    const latexMatch = binary.match(/(\$|\\begin\{equation\}|\\\[)(.*?)(\$|\\end\{equation\}|\\\])/);
+    return latexMatch ? latexMatch[0] : null;
+  };
+
   const handleUpload_gv = async (e) => {
-  const file = e.target.files[0];
-  const reader = new FileReader();
+    const file = e.target.files[0];
+    if (!file || !exams_gv.Exams) return alert("Thầy nhập mã đề trước nhé!");
 
-  reader.onload = async (event) => {
-    const arrayBuffer = event.target.result;
-    let tempImages = []; 
-    let imageCounter = 0;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const arrayBuffer = event.target.result;
+      let tempImages = [];
+      let imageCounter = 0;
+      const dateStr = "300126"; 
 
-    // 1. Cấu hình Mammoth để bóc LaTeX hoặc để lại Placeholder ảnh
-    const options = {
-      convertImage: mammoth.images.inline((element) => {
-        return element.read("base64").then((imageBuffer) => {
-          const latex = convertMathTypeToBase64(imageBuffer);
-          
-          if (latex) {
-            // Trả về alt chứa LaTeX
-            return { src: "", alt: latex }; 
-          } else {
+      const options = {
+        convertImage: mammoth.images.inline((element) => {
+          return element.read("base64").then((imageBuffer) => {
+            const latex = convertMathTypeToBase64(imageBuffer);
+            if (latex) return { src: "", alt: latex };
+
             imageCounter++;
-            const placeholder = `[[IMG_DRIVE_${imageCounter}]]`;
+            const placeholder = `[[IMG_${imageCounter}]]`;
             tempImages.push({
-              placeholder: placeholder,
+              placeholder,
+              name: `${exams_gv.Exams}.${dateStr}.${imageCounter}`,
               base64: imageBuffer,
               type: element.contentType
             });
             return { src: placeholder, alt: "hinh_ve" };
+          });
+        })
+      };
+
+      try {
+        setLoading_gv(true);
+        const result = await mammoth.convertToHtml({ arrayBuffer }, options);
+        let html = result.value.replace(/<img[^>]+alt="([^"]+)"[^>]*>/g, (m, alt) => alt === "hinh_ve" ? m : alt);
+
+        // Upload to Drive
+        if (tempImages.length > 0) {
+          const resImg = await fetch(apiGV_gv, {
+            method: "POST",
+            body: JSON.stringify({
+              action: "uploadImagesToDrive",
+              folderId: exams_gv.imgURL,
+              images: tempImages
+            })
+          }).then(r => r.json());
+
+          if (resImg.status === "success") {
+            Object.keys(resImg.links).forEach(key => {
+              html = html.replace(key, resImg.links[key]);
+            });
           }
-        });
-      })
+        }
+        parseExam_gv(html);
+      } catch (err) { alert("Lỗi: " + err.message); }
+      finally { setLoading_gv(false); }
     };
-
-    // 2. Chuyển Word sang HTML
-    const result = await mammoth.convertToHtml({ arrayBuffer }, options);
-    let html = result.value;
-
-    // --- VỊ TRÍ GẮN LỆNH CỦA THẦY ĐÂY ---
-    // Lệnh này quét lại toàn bộ HTML, chỗ nào là <img> có alt LaTeX thì biến thành chữ thuần
-    html = html.replace(/<img[^>]+alt="([^"]+)"[^>]*>/g, (match, alt) => {
-      return alt === "hinh_ve" ? match : alt; 
-    });
-    // ------------------------------------
-
-    // 3. Sau đó mới gọi hàm xử lý ảnh Drive và chia câu
-    processAndUpload_gv(html, tempImages);
+    reader.readAsArrayBuffer(file);
   };
-  reader.readAsArrayBuffer(file);
-};
-  // ============
-  const uploadRes = await fetch(apiGV_gv, {
-  method: "POST",
-  body: JSON.stringify({
-    action: "uploadImagesToDrive", // KHỚP Ở ĐÂY
-    folderId: exams_gv.imgURL,      // Link folder Drive từ Form
-    images: imageList               // Mảng ảnh base64 đã bóc từ Word
-  })
-}).then(r => r.json());
-  // =========== xử lý ảnh ==============
-  const processAndUpload_gv = async (rawHtml, tempImages) => {
-  setLoading_gv(true);
-  let finalHtml = rawHtml;
 
-  // --- BƯỚC 1: ĐẶT TÊN ẢNH CHUẨN ---
-  // Giả sử ta bóc được danh sách câu hỏi trước để biết ảnh nằm ở câu nào
-  // Tạm thời dùng Regex để tìm vị trí placeholder ảnh trong nội dung
-  const dateStr = "300126"; // Thầy có thể lấy động: new Date().toLocaleDateString('en-GB').replace(/\//g, '')
-  
-  const updatedImages = tempImages.map((img, index) => {
-    // Logic đặt tên của thầy: MaDe.Ngay.Cau.STT_Anh
-    // Vì lúc này chưa chia câu hoàn toàn, ta tạm đặt theo STT quét được
-    // Sau khi parse câu, ta sẽ map lại chính xác hơn
-    const newName = `${exams_gv.Exams}.${dateStr}.${img.cauIndex || 'tmp'}.${img.sttTrongCau || index + 1}`;
-    return { ...img, name: newName };
-  });
-
-  try {
-    // --- BƯỚC 2: ĐẨY LÊN DRIVE ---
-    const uploadRes = await fetch(apiGV_gv, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "uploadImagesToDrive",
-        folderId: exams_gv.imgURL,
-        images: updatedImages
-      })
-    }).then(r => r.json());
-
-    if (uploadRes.status === "success") {
-      // --- BƯỚC 3: THAY LINK VÀO HTML ---
-      Object.keys(uploadRes.links).forEach(placeholder => {
-        finalHtml = finalHtml.replace(placeholder, uploadRes.links[placeholder]);
-      });
-
-      // --- BƯỚC 4: CHIA CÂU HỎI (BẢN NÂNG CẤP) ---
-      // Sau khi có HTML sạch link Drive, ta mới split câu
-      const parsedQuestions = parseQuestionsFromHtml_gv(finalHtml); 
-      setQuestions(parsedQuestions);
-      alert("Đã bóc tách xong và lưu ảnh vào Drive!");
-    }
-  } catch (err) {
-    alert("Lỗi xử lý ảnh: " + err.message);
-  } finally {
-    setLoading_gv(false);
-  }
-};
-  // ======== xử lý mathtype ==========
-  const convertMathTypeToBase64 = (base64Str) => {
-  // Giải mã base64 sang chuỗi nhị phân
-  const binary = atob(base64Str);
-  
-  // Tìm kiếm từ khóa "MathType" hoặc cấu trúc MTEF trong metadata của ảnh
-  // Thông thường MathType lưu LaTeX sau chuỗi "Equation Native" hoặc trong Alt text
-  // Ở đây em dùng Regex để bắt các ký tự đặc trưng của LaTeX trong WMF
-  const latexMatch = binary.match(/(\$|\\begin\{equation\}|\\\[)(.*?)(\$|\\end\{equation\}|\\\])/);
-  
-  if (latexMatch) {
-    return latexMatch[0]; // Trả về đoạn mã LaTeX: e.g. $\frac{a}{b}$
-  }
-  
-  // Nếu không tìm thấy LaTeX trực tiếp, ta trả về null để hệ thống coi nó là ảnh bình thường (hình vẽ)
-  return null;
-};
-
-  // ================== PARSE ĐỀ WORD ==================
   const parseExam_gv = (html) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     const nodes = [...doc.body.children];
-
     let part = "";
+    let result = [];
     let currentQuestion = null;
-    const result = [];
 
     nodes.forEach((node) => {
       const text = node.textContent.trim();
-
       if (text.startsWith("Phần I")) return (part = "I");
       if (text.startsWith("Phần II")) return (part = "II");
       if (text.startsWith("Phần III")) return (part = "III");
@@ -181,7 +105,7 @@ export default function ExamCreator_gv() {
       if (/^Câu\s*\d+/i.test(text)) {
         currentQuestion = {
           part,
-          question: text.replace(/^Câu\s*\d+[\.:]?\s*/i, ""),
+          question: node.innerHTML.replace(/^Câu\s*\d+[\.:]?\s*/i, ""),
           options: [],
           answer: part === "II" ? [] : "",
           explanation: "",
@@ -192,291 +116,146 @@ export default function ExamCreator_gv() {
 
       if (!currentQuestion) return;
 
-      // Phần I: A. B. C. D.
       if (part === "I" && /^[A-D]\./.test(text)) {
-        const correct = node.innerHTML.includes("<u>");
-        currentQuestion.options.push({
-          text: text.replace(/^[A-D]\.\s*/, ""),
-          correct,
-        });
-        if (correct) currentQuestion.answer = text[0];
-      }
-
-      // Phần II: a) b) c)
-      if (part === "II" && /^[a-d]\)/.test(text)) {
-        const correct = node.innerHTML.includes("<u>");
-        currentQuestion.options.push({
-          text: text.replace(/^[a-d]\)\s*/, ""),
-          correct,
-        });
-        if (correct) currentQuestion.answer.push(text[0]);
-      }
-
-      // Phần III: <key=...>
-      if (part === "III") {
-        const match = node.innerHTML.match(/<key\s*=\s*(.+?)>/i);
-        if (match) currentQuestion.answer = match[1].trim();
-      }
-
-      // Lời giải
-      if (text.startsWith("Lời giải")) {
-        currentQuestion.explanation = "";
-        return;
-      }
-
-      if (currentQuestion.explanation !== undefined) {
-        currentQuestion.explanation += node.innerHTML;
+        if (node.innerHTML.includes("<u>")) currentQuestion.answer = text[0];
+        currentQuestion.options.push(node.innerHTML.replace(/^[A-D]\.\s*/, ""));
+      } else if (part === "II" && /^[a-d]\)/.test(text)) {
+        if (node.innerHTML.includes("<u>")) currentQuestion.answer.push(text[0]);
+        currentQuestion.options.push(node.innerHTML.replace(/^[a-d]\)\s*/, ""));
+      } else if (part === "III" && node.innerHTML.includes("<key=")) {
+        const m = node.innerHTML.match(/<key\s*=\s*(.+?)>/i);
+        if (m) currentQuestion.answer = m[1].trim();
+      } else if (text.startsWith("Lời giải")) {
+        currentQuestion.explanation = " ";
+      } else {
+        if (currentQuestion.explanation) currentQuestion.explanation += node.innerHTML;
+        else currentQuestion.question += node.innerHTML;
       }
     });
-
     setQuestions(result);
   };
 
-  // ================== CHUẨN HÓA GHI exam_data ==================
-  const normalizeQuestions_gv = (raw) => {
-    return raw.map((q) => ({
-      part: q.part,
-      type:
-        q.part === "I"
-          ? "mcq"
-          : q.part === "II"
-          ? "true-false"
-          : "short-answer",
-      question: q.question,
-      options: q.options.length ? q.options.map((o) => o.text) : null,
-      answer: q.answer,
-      loigiai: q.explanation || "",
-    }));
-  };
-
-  // ================== ĐẨY exam_data ==================
-  const pushExamData_gv = async () => {
-    if (!questions.length) return alert("Chưa có câu hỏi");
-
-    const data = normalizeQuestions_gv(questions);
-
-    const res = await fetch(apiGV_gv, {
+  const verifyGV_gv = async () => {
+    setLoading_gv(true);
+    const res = await fetch(`${DANHGIA_URL}?action=verifyGV_gv`, {
       method: "POST",
-      body: JSON.stringify({
-        action: "pushExamData",
-        data,
-      }),
-    }).then((r) => r.json());
-
-    if (res.status === "success") {
-      alert(`✅ Đã ghi ${data.length} câu vào exam_data`);
-    } else {
-      alert("❌ Lỗi ghi exam_data");
-    }
-  };
-
-  // ================== LƯU exams (tạm demo) ==================
-  const saveExamConfig_gv = async () => {
-    const res = await fetch(apiGV_gv, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "saveExam",
-        note: "Cấu hình đề (sẽ mở form sau)",
-      }),
-    }).then((r) => r.json());
-
-    if (res.status === "success") {
-      alert("✅ Đã lưu exams");
-    } else {
-      alert("❌ Lỗi lưu exams");
-    }
-  };
-  // ===============Form exams======
-  // ================== FORM EXAMS ==================
-const [exams_gv, setExams_gv] = useState({
-  Exams: "",
-  IdNumber: "",
-  fulltime: 45,
-  mintime: 10,
-  tab: 0,
-  close: 0,
-  imgURL: "",
-
-  MCQ: 0,
-  scoremcq: 0,
-
-  TF: 0,
-  scoretf: 0,
-
-  SA: 0,
-  scoresa: 0
-});
-
-const onChangeExams_gv = (key, value) => {
-  setExams_gv(prev => ({
-    ...prev,
-    [key]: value
-  }));
-};
-  // =========================
-  const finalPush_gv = async () => {
-  if (!questions.length) return alert("Chưa có câu hỏi thầy ơi!");
-  if (!exams_gv.Exams) return alert("Thầy chưa nhập mã đề kìa!");
-
-  setLoading_gv(true);
-  try {
-    const res = await fetch(apiGV_gv, {
-      method: "POST",
-      // Không dùng mode: 'no-cors' để nhận được phản hồi OK/Error
-      body: JSON.stringify({
-        action: "saveFullExam", // Khớp với Script đêm qua
-        examConfig: exams_gv,
-        examQuestions: normalizeQuestions_gv(questions)
-      }),
-    }).then(r => r.text()); // Nhận về chữ "OK"
-
-    if (res === "OK") {
-      alert("🚀 Tuyệt vời! Đề đã về bản chuẩn.");
-    } else {
-      alert("❌ Có lỗi: " + res);
-    }
-  } catch (err) {
-    alert("❌ Lỗi kết nối: " + err.message);
-  } finally {
+      body: JSON.stringify({ idgv: idgv_gv }),
+    }).then(r => r.json());
     setLoading_gv(false);
-  }
-};
-// ===============save all ==============
+    if (res.status === "success") { setVerified_gv(true); setGvInfo_gv(res.data); }
+    else setError_gv("ID không tồn tại");
+  };
+
   const saveAll_gv = async () => {
-  if (!questions.length || !exams_gv.Exams) {
-    alert("Thiếu mã đề hoặc chưa upload file Word thầy ơi!");
-    return;
-  }
-
-  setLoading_gv(true);
-  try {
-    // Tự động đếm số lượng câu theo từng loại trước khi gửi
-    const mcq = questions.filter(q => q.part === "I").length;
-    const tf = questions.filter(q => q.part === "II").length;
-    const sa = questions.filter(q => q.part === "III").length;
-
-    const payload = {
-      action: "saveFullExam",
-      examConfig: { 
-        ...exams_gv, 
-        IdNumber: idgv_gv,
-        MCQ: mcq, TF: tf, SA: sa 
-      },
-      examQuestions: normalizeQuestions_gv(questions)
-    };
-
-    const res = await fetch(apiGV_gv, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }).then(r => r.text());
-
-    if (res === "OK") {
-      alert("🚀 Đã lưu toàn bộ đề và cấu hình thành công!");
-    } else {
-      alert("❌ Lỗi: " + res);
-    }
-  } catch (err) {
-    alert("❌ Lỗi kết nối: " + err.message);
-  } finally {
+    setLoading_gv(true);
+    try {
+      const payload = {
+        action: "saveFullExam",
+        examConfig: { ...exams_gv, IdNumber: idgv_gv, 
+          MCQ: questions.filter(q => q.part === "I").length,
+          TF: questions.filter(q => q.part === "II").length,
+          SA: questions.filter(q => q.part === "III").length
+        },
+        examQuestions: questions.map(q => ({
+          part: q.part, type: q.part === "I" ? "mcq" : q.part === "II" ? "true-false" : "short-answer",
+          question: q.question, options: q.options.length ? q.options : null,
+          answer: q.answer, loigiai: q.explanation 
+        }))
+      };
+      const res = await fetch(apiGV_gv, { method: "POST", body: JSON.stringify(payload) }).then(r => r.text());
+      alert(res === "OK" ? "🚀 Thành công rực rỡ!" : "❌ Lỗi: " + res);
+    } catch (e) { alert("Lỗi: " + e.message); }
     setLoading_gv(false);
-  }
-};
+  };
 
-
-  // ================== RENDER ==================
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
-  {!verified_gv && (
-    <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl border">
-      <h2 className="text-xl font-black mb-6 text-center text-slate-800">Xác minh Giáo viên</h2>
-      <input
-        className="w-full p-4 rounded-xl border focus:ring-2 ring-emerald-500 outline-none"
-        placeholder="Nhập ID giáo viên"
-        value={idgv_gv}
-        onChange={(e) => setIdgv_gv(e.target.value)}
-      />
-      {error_gv && <div className="text-red-500 text-sm mt-3 text-center">{error_gv}</div>}
-      <button
-        onClick={verifyGV_gv}
-        disabled={loading_gv}
-        className="w-full mt-6 bg-emerald-600 text-white p-4 rounded-xl font-black hover:bg-emerald-700 transition"
-      >
-        {loading_gv ? "Đang kiểm tra..." : "Xác minh"}
-      </button>
-    </div>
-  )}
-
-  {verified_gv && (
-    <>
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-black text-slate-800">
-          Tạo đề từ Word – <span className="text-emerald-600">{gvInfo_gv?.name || idgv_gv}</span>
-        </h2>
-        <div className="bg-slate-100 px-4 py-2 rounded-full text-xs font-bold text-slate-500">GV ID: {idgv_gv}</div>
-      </div>
-
-      <div className="bg-white p-6 rounded-3xl shadow-sm border space-y-4">
-        <div className="flex items-center gap-4 border-b pb-4">
-          <span className="font-bold text-slate-700">1. Chọn file Word:</span>
-          <input type="file" accept=".docx" onChange={handleUpload_gv} className="text-sm" />
+    <div className="p-6 space-y-6 max-w-6xl mx-auto font-sans">
+      {!verified_gv ? (
+        <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-2xl border text-center">
+          <h2 className="text-2xl font-black mb-6">Xác minh Giáo viên</h2>
+          <input className="w-full p-4 rounded-xl border-2 mb-4 focus:border-emerald-500 outline-none" placeholder="Nhập ID" value={idgv_gv} onChange={(e) => setIdgv_gv(e.target.value)} />
+          {error_gv && <p className="text-red-500 text-sm mb-4">{error_gv}</p>}
+          <button onClick={verifyGV_gv} className="w-full bg-emerald-600 text-white p-4 rounded-xl font-black shadow-lg">XÁC MINH NGAY</button>
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="col-span-2">
-            <label className="block text-xs font-bold mb-1 text-slate-500">Mã đề (Exams)</label>
-            <input className="w-full p-2 border rounded-lg font-bold" value={exams_gv.Exams} onChange={(e) => onChangeExams_gv("Exams", e.target.value)} placeholder="VD: 1201" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold mb-1 text-slate-500">Tổng TG (Phút)</label>
-            <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.fulltime} onChange={(e) => onChangeExams_gv("fulltime", e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-xs font-bold mb-1 text-slate-500">TG tối thiểu</label>
-            <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.mintime} onChange={(e) => onChangeExams_gv("mintime", e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-xs font-bold mb-1 text-slate-500">Thoát Tab</label>
-            <input type="number" className="w-full p-2 border rounded-lg" value={exams_gv.tab} onChange={(e) => onChangeExams_gv("tab", e.target.value)} />
+      ) : (
+        <>
+          <div className="flex justify-between items-end bg-gradient-to-r from-emerald-600 to-teal-600 p-8 rounded-3xl text-white shadow-xl">
+            <div>
+              <p className="text-emerald-100 font-bold uppercase tracking-widest text-xs">Giáo viên: {gvInfo_gv?.name}</p>
+              <h2 className="text-3xl font-black">Cấu hình Đề thi</h2>
+            </div>
+            <div className="text-right">
+              <p className="text-xs opacity-70">Mã GV: {idgv_gv}</p>
+              <p className="font-mono text-xl">{exams_gv.Exams || "####"}</p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold mb-1 text-blue-600">Điểm P.I</label>
-            <input type="number" step="0.25" className="w-full p-2 border border-blue-200 rounded-lg" value={exams_gv.scoremcq} onChange={(e) => onChangeExams_gv("scoremcq", e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-xs font-bold mb-1 text-emerald-600">Điểm P.II</label>
-            <input type="number" step="0.25" className="w-full p-2 border border-emerald-200 rounded-lg" value={exams_gv.scoretf} onChange={(e) => onChangeExams_gv("scoretf", e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-xs font-bold mb-1 text-orange-600">Điểm P.III</label>
-            <input type="number" step="0.25" className="w-full p-2 border border-orange-200 rounded-lg" value={exams_gv.scoresa} onChange={(e) => onChangeExams_gv("scoresa", e.target.value)} />
-          </div>
-          <div className="col-span-2">
-            <label className="block text-xs font-bold mb-1 text-slate-500">Link Drive Ảnh</label>
-            <input className="w-full p-2 border rounded-lg" value={exams_gv.imgURL} onChange={(e) => onChangeExams_gv("imgURL", e.target.value)} placeholder="Link folder ảnh" />
-          </div>
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black text-slate-400">MÃ ĐỀ (ID BIẾN ĐỔI)</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl font-bold" value={exams_gv.Exams} onChange={e => onChangeExams_gv("Exams", e.target.value)} placeholder="VD: 601" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400">TỔNG TG (PHÚT)</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl font-bold" type="number" value={exams_gv.fulltime} onChange={e => onChangeExams_gv("fulltime", e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400">TG TỐI THIỂU</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl font-bold" type="number" value={exams_gv.mintime} onChange={e => onChangeExams_gv("mintime", e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400">THOÁT TAB</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl font-bold" type="number" value={exams_gv.tab} onChange={e => onChangeExams_gv("tab", e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400">ĐÓNG ĐỀ (0/1)</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl font-bold" type="number" value={exams_gv.close} onChange={e => onChangeExams_gv("close", e.target.value)} />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black text-slate-400">LINK FOLDER DRIVE ẢNH</label>
+                  <input className="w-full p-3 bg-slate-50 border rounded-xl text-xs" value={exams_gv.imgURL} onChange={e => onChangeExams_gv("imgURL", e.target.value)} placeholder="Dán link folder tại đây" />
+                </div>
+              </div>
 
-        <button
-          onClick={saveAll_gv}
-          disabled={loading_gv || questions.length === 0}
-          className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-indigo-700 disabled:bg-slate-300 transition shadow-lg shadow-indigo-100"
-        >
-          {loading_gv ? "ĐANG LƯU DỮ LIỆU..." : "XÁC NHẬN & ĐẨY ĐỀ LÊN HỆ THỐNG"}
-        </button>
-      </div>
+              <div className="grid grid-cols-3 gap-4 border-t pt-6">
+                <div className="bg-blue-50 p-4 rounded-2xl">
+                  <label className="text-[10px] font-black text-blue-600 block mb-1">ĐIỂM PHẦN I</label>
+                  <input type="number" step="0.25" className="w-full bg-transparent text-xl font-black outline-none" value={exams_gv.scoremcq} onChange={e => onChangeExams_gv("scoremcq", e.target.value)} />
+                </div>
+                <div className="bg-emerald-50 p-4 rounded-2xl">
+                  <label className="text-[10px] font-black text-emerald-600 block mb-1">ĐIỂM PHẦN II</label>
+                  <input type="number" step="0.25" className="w-full bg-transparent text-xl font-black outline-none" value={exams_gv.scoretf} onChange={e => onChangeExams_gv("scoretf", e.target.value)} />
+                </div>
+                <div className="bg-orange-50 p-4 rounded-2xl">
+                  <label className="text-[10px] font-black text-orange-600 block mb-1">ĐIỂM PHẦN III</label>
+                  <input type="number" step="0.25" className="w-full bg-transparent text-xl font-black outline-none" value={exams_gv.scoresa} onChange={e => onChangeExams_gv("scoresa", e.target.value)} />
+                </div>
+              </div>
 
-      <div className="space-y-2">
-        <h3 className="font-bold text-slate-700 flex justify-between">
-          <span>Xem trước dữ liệu:</span>
-          <span className="text-emerald-600">{questions.length} câu đã quét</span>
-        </h3>
-        <pre className="bg-slate-900 text-emerald-400 p-4 text-xs max-h-60 overflow-auto rounded-2xl shadow-inner">
-          {JSON.stringify(questions, null, 2)}
-        </pre>
-      </div>
-    </>
-)} 
+              <div className="p-4 border-2 border-dashed rounded-2xl flex items-center justify-between bg-slate-50">
+                <span className="text-sm font-bold text-slate-500">TẢI FILE WORD (.DOCX)</span>
+                <input type="file" accept=".docx" onChange={handleUpload_gv} className="text-xs" />
+              </div>
+
+              <button onClick={saveAll_gv} disabled={loading_gv || questions.length === 0} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xl hover:bg-black transition shadow-2xl disabled:bg-slate-200 disabled:text-slate-400">
+                {loading_gv ? "ĐANG LÀM VIỆC..." : "XÁC NHẬN & ĐẨY ĐỀ LÊN CLOUD"}
+              </button>
+            </div>
+
+            <div className="bg-slate-900 rounded-3xl p-6 shadow-inner h-fit max-h-[700px] overflow-auto">
+              <h3 className="text-emerald-400 font-black mb-4 flex justify-between items-center text-sm">
+                <span>DỮ LIỆU ĐÃ QUÉT</span>
+                <span className="bg-emerald-400/20 px-3 py-1 rounded-full">{questions.length} CÂU</span>
+              </h3>
+              <pre className="text-emerald-400 text-[9px] font-mono leading-tight">
+                {JSON.stringify(questions, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </>
+      )}
     </div>
-  ); // Đóng của return
-} // Đóng của function ExamCreator_gv
+  );
+}
