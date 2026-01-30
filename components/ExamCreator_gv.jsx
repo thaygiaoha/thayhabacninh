@@ -5,7 +5,7 @@ interface ExamCreatorProps {
   onBack_gv: () => void;
 }
 
-const ExamCreator_gv: React.FC<ExamCreatorProps> = ({ onBack_gv }) => {
+const ExamCreator_gv = ({ onBack_gv }) => {
   // 1. Quản lý trạng thái xác minh
   const [isVerified_gv, setIsVerified_gv] = useState(false);
   const [gvName_gv, setGvName_gv] = useState("");
@@ -46,7 +46,7 @@ const ExamCreator_gv: React.FC<ExamCreatorProps> = ({ onBack_gv }) => {
   }, []);
 
   // 4. Hàm xác minh ID
-  const handleVerify_gv = (idInput: string) => {
+  const handleVerify_gv = (idInput) => {
     if (loading_gv) return;
     const gvMatch = dsGiaoVien_gv.find(gv => String(gv.id) === String(idInput));
     
