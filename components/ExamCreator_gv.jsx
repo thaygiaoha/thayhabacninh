@@ -71,9 +71,9 @@ const ExamCreator_gv = ({ onBack_gv }) => {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8 px-4 border-b pb-6 border-slate-100">
         <div>
-          <h2 className="text-xl font-black text-slate-800 uppercase italic flex items-center gap-2">
+          <h2 className="text-xl font-black text-slate-800 uppercase flex items-center gap-2">
             <i className="fa-solid fa-file-shield text-emerald-500"></i>
-            Hệ thống Kiến tạo đề thi (GV)
+            Hệ thống kiến tạo đề thi (GV)
           </h2>
           {isVerified_gv && (
             <div className="mt-1 flex items-center gap-2">
