@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { DANHGIA_URL, API_ROUTING } from "../config";
 import mammoth from "mammoth";
-// import ExamForm_gv from "./ExamForm_gv"; // nhớ tạo hoặc comment tạm
 
 export default function ExamCreator_gv() {
-  const [html, setHtml] = useState("");
+  // ================== STATE CHUNG ==================
   const [questions, setQuestions] = useState([]);
 
+  // ================== XÁC MINH GV ==================
   const [verified_gv, setVerified_gv] = useState(false);
   const [idgv_gv, setIdgv_gv] = useState("");
   const [gvInfo_gv, setGvInfo_gv] = useState(null);
@@ -15,7 +15,6 @@ export default function ExamCreator_gv() {
 
   const apiGV_gv = verified_gv ? API_ROUTING[idgv_gv] : null;
 
-  // ================== XÁC MINH GV ==================
   const verifyGV_gv = async () => {
     if (!idgv_gv) return;
 
@@ -58,11 +57,10 @@ export default function ExamCreator_gv() {
       }
     );
 
-    setHtml(result.value);
     parseExam_gv(result.value);
   };
 
-  // ================== PARSE ĐỀ ==================
+  // ================== PARSE ĐỀ WORD ==================
   const parseExam_gv = (html) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -82,7 +80,7 @@ export default function ExamCreator_gv() {
       if (/^Câu\s*\d+/i.test(text)) {
         currentQuestion = {
           part,
-          question: text,
+          question: text.replace(/^Câu\s*\d+[\.:]?\s*/i, ""),
           options: [],
           answer: part === "II" ? [] : "",
           explanation: "",
@@ -93,23 +91,33 @@ export default function ExamCreator_gv() {
 
       if (!currentQuestion) return;
 
+      // Phần I: A. B. C. D.
       if (part === "I" && /^[A-D]\./.test(text)) {
         const correct = node.innerHTML.includes("<u>");
-        currentQuestion.options.push({ text, correct });
+        currentQuestion.options.push({
+          text: text.replace(/^[A-D]\.\s*/, ""),
+          correct,
+        });
         if (correct) currentQuestion.answer = text[0];
       }
 
+      // Phần II: a) b) c)
       if (part === "II" && /^[a-d]\)/.test(text)) {
         const correct = node.innerHTML.includes("<u>");
-        currentQuestion.options.push({ text, correct });
+        currentQuestion.options.push({
+          text: text.replace(/^[a-d]\)\s*/, ""),
+          correct,
+        });
         if (correct) currentQuestion.answer.push(text[0]);
       }
 
+      // Phần III: <key=...>
       if (part === "III") {
         const match = node.innerHTML.match(/<key\s*=\s*(.+?)>/i);
-        if (match) currentQuestion.answer = match[1];
+        if (match) currentQuestion.answer = match[1].trim();
       }
 
+      // Lời giải
       if (text.startsWith("Lời giải")) {
         currentQuestion.explanation = "";
         return;
@@ -122,131 +130,88 @@ export default function ExamCreator_gv() {
 
     setQuestions(result);
   };
-  // ==========Cấu hình đề thi=======
-  const saveExam_gv = async () => {
-  if (!apiGV_gv) return alert("Chưa xác minh GV");
 
-  const payload = {
-    action: "saveExam",
-    idExam,
-    idNumber,
-    fulltime,
-    mintime,
-    tab,
-    close,
-    imgURL,
-    MCQ,
-    scoreMCQ,
-    TF,
-    scoreTF,
-    SA,
-    scoreSA
+  // ================== CHUẨN HÓA GHI exam_data ==================
+  const normalizeQuestions_gv = (raw) => {
+    return raw.map((q) => ({
+      part: q.part,
+      type:
+        q.part === "I"
+          ? "mcq"
+          : q.part === "II"
+          ? "true-false"
+          : "short-answer",
+      question: q.question,
+      options: q.options.length ? q.options.map((o) => o.text) : null,
+      answer: q.answer,
+      loigiai: q.explanation || "",
+    }));
   };
 
-  const res = await fetch(apiGV_gv, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify(payload)
-  }).then(r => r.json());
-
-  if (res.status === "success") {
-    alert("✅ Đã cấu hình đề thi");
-  } else {
-    alert("❌ Lỗi tạo cấu hình đề");
-  }
-};
-  // =========
+  // ================== ĐẨY exam_data ==================
   const pushExamData_gv = async () => {
-  if (!questions.length) {
-    alert("Chưa có câu hỏi từ Word");
-    return;
-  }
+    if (!questions.length) return alert("Chưa có câu hỏi");
 
-  const normalized = normalizeQuestions_gv(questions);
+    const data = normalizeQuestions_gv(questions);
 
-  const res = await fetch(API_ROUTING[idgv_gv], {
-    method: "POST",
-    body: JSON.stringify({
-      action: "pushExamData",
-      idExam: examId_gv,
-      data: normalized
-    })
-  }).then(r => r.json());
+    const res = await fetch(apiGV_gv, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "pushExamData",
+        data,
+      }),
+    }).then((r) => r.json());
 
-  if (res.status === "success") {
-    alert(`✅ Đã ghi ${normalized.length} câu vào exam_data`);
-  } else {
-    alert("❌ Lỗi ghi exam_data");
-  }
-};
-
-
-
-  // ================
-  const normalizeQuestions_gv = (rawQuestions) => {
-  return rawQuestions.map(q => {
-    return {
-      part: q.part,                 // I | II | III
-      type:
-        q.part === "I" ? "mcq" :
-        q.part === "II" ? "true-false" :
-        "short-answer",
-
-      question: q.question
-        .replace(/^Câu\s*\d+[\.:]?\s*/i, "") // XOÁ "Câu x"
-
-      options:
-        q.options && q.options.length
-          ? q.options.map(o => o.text.replace(/^[A-Da-d][\.\)]\s*/, ""))
-          : null,
-
-      answer: q.answer,
-      loigiai: q.explanation || ""
-    };
-  });
-};
-// ==============
-const saveExamConfig_gv = async () => {
-  setLoading_gv(true);
-
-  const payload = {
-    action: "saveExam",
-    idgv: idgv_gv,
-    data: {
-      IdExam: examId_gv,
-      IdNumber: idNumber_gv,
-      fulltime: fulltime_gv,
-      mintime: mintime_gv,
-      tab: tabLimit_gv,
-      close: closeTab_gv,
-      imgURL: imgURL_gv,
-
-      MCQ: mcqCount_gv,
-      scoremcq: scoreMcq_gv,
-      TF: tfCount_gv,
-      scoretf: scoreTf_gv,
-      SA: saCount_gv,
-      scoresa: scoreSa_gv
+    if (res.status === "success") {
+      alert(`✅ Đã ghi ${data.length} câu vào exam_data`);
+    } else {
+      alert("❌ Lỗi ghi exam_data");
     }
   };
 
-  const res = await fetch(API_ROUTING[idgv_gv], {
-    method: "POST",
-    body: JSON.stringify(payload)
-  }).then(r => r.json());
+  // ================== LƯU exams (tạm demo) ==================
+  const saveExamConfig_gv = async () => {
+    const res = await fetch(apiGV_gv, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "saveExam",
+        note: "Cấu hình đề (sẽ mở form sau)",
+      }),
+    }).then((r) => r.json());
 
-  setLoading_gv(false);
+    if (res.status === "success") {
+      alert("✅ Đã lưu exams");
+    } else {
+      alert("❌ Lỗi lưu exams");
+    }
+  };
+  // ===============Form exams======
+  // ================== FORM EXAMS ==================
+const [exams_gv, setExams_gv] = useState({
+  Exams: "",
+  IdNumber: "",
+  fulltime: 45,
+  mintime: 10,
+  tab: 0,
+  close: 0,
+  imgURL: "",
 
-  if (res.status === "success") {
-    alert("✅ Đã lưu cấu hình đề thi");
-  } else {
-    alert("❌ Lỗi lưu exams");
-  }
+  MCQ: 0,
+  scoremcq: 0,
+
+  TF: 0,
+  scoretf: 0,
+
+  SA: 0,
+  scoresa: 0
+});
+
+const onChangeExams_gv = (key, value) => {
+  setExams_gv(prev => ({
+    ...prev,
+    [key]: value
+  }));
 };
-// ===============
-
-
-
 
 
   // ================== RENDER ==================
@@ -281,10 +246,29 @@ const saveExamConfig_gv = async () => {
 
       {verified_gv && (
         <>
-          <h2 className="text-xl font-bold">Tạo đề thi từ Word</h2>
+          <h2 className="text-xl font-bold">
+            Tạo đề từ Word – {gvInfo_gv?.name || idgv_gv}
+          </h2>
+
           <input type="file" accept=".docx" onChange={handleUpload_gv} />
 
-          <pre className="bg-gray-100 p-4 text-sm max-h-96 overflow-auto">
+          <div className="flex gap-4">
+            <button
+              onClick={saveExamConfig_gv}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black"
+            >
+              Lưu cấu hình đề (exams)
+            </button>
+
+            <button
+              onClick={pushExamData_gv}
+              className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black"
+            >
+              Đẩy câu hỏi (exam_data)
+            </button>
+          </div>
+
+          <pre className="bg-gray-100 p-4 text-sm max-h-96 overflow-auto rounded-xl">
             {JSON.stringify(questions, null, 2)}
           </pre>
         </>
@@ -292,20 +276,3 @@ const saveExamConfig_gv = async () => {
     </div>
   );
 }
-
-<button
-  onClick={saveExamConfig_gv}
-  className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black"
->
-  Lưu cấu hình đề thi
-</button>
-<button
-  onClick={pushExamData_gv}
-  className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black"
->
-  Đẩy câu hỏi lên đề thi
-</button>
-
-
-
-export default ExamCreator_gv;
