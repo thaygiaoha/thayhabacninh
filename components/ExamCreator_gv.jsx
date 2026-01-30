@@ -1,10 +1,9 @@
 import { DANHGIA_URL, API_ROUTING } from '../config';
-
 import React, { useState, useEffect } from 'react';
 import mammoth from 'mammoth';
 
 const ExamCreator_gv = ({ onBack_gv }) => {
-  // 1. STATE (Móng nhà - Đã đưa lên đầu chuẩn đét)
+  // 1. STATE MANAGEMENT (Móng nhà vững chắc)
   const [finalData_gv, setFinalData_gv] = useState([]); 
   const [isVerified_gv, setIsVerified_gv] = useState(false);
   const [gvName_gv, setGvName_gv] = useState("");
@@ -18,7 +17,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
     saCount_gv: 0, saScore_gv: 0   
   });
 
-  // 2. HÀM NGHIỀN FILE WORD (Đã gộp bóc tách và tự đếm số câu)
+  // 2. MÁY NGHIỀN WORD (Xử lý bóc tách & Tự động đếm)
   const handleFileUpload_gv = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -27,18 +26,21 @@ const ExamCreator_gv = ({ onBack_gv }) => {
       try {
         const result = await mammoth.convertToHtml({ arrayBuffer: e.target.result }, { styleMap: ["u => u"] });
         const htmlContent = result.value;
+
+        // Chặt 3 phần dựa trên thẻ gạch chân "Phần I/II/III"
         const cleanHtml = htmlContent.replace(/<u[^>]*>(Phần\s*(?:I|1|II|2|III|3))<\/u>/gi, "$1");
-        
         const part1 = cleanHtml.split(/Phần\s*(?:I|1)/i)[1]?.split(/Phần\s*(?:II|2)/i)[0] || "";
         const part2 = cleanHtml.split(/Phần\s*(?:II|2)/i)[1]?.split(/Phần\s*(?:III|3)/i)[0] || "";
         const part3 = cleanHtml.split(/Phần\s*(?:III|3)/i)[1] || "";
 
         let finalRows = [];
         let stt = 1;
-        const dateStr = new Date().toLocaleDateString('en-GB').split('/').reverse().join('').substring(2); // VD: 260130
+        // Tạo chuỗi ngày tháng năm giây theo yêu cầu: YYMMDD
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('en-GB').split('/').reverse().join('').substring(2); 
         const grade = "10"; 
 
-        // --- Xử lý MCQ ---
+        // --- XỬ LÝ PHẦN I: MCQ ---
         const mcqs = part1.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
         mcqs.forEach(raw => {
           const id = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
@@ -50,7 +52,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
           stt++;
         });
 
-        // --- Xử lý TF ---
+        // --- XỬ LÝ PHẦN II: THẤY ĐÚNG/SAI ---
         const tfs = part2.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
         tfs.forEach(raw => {
           const id = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
@@ -60,7 +62,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
           stt++;
         });
 
-        // --- Xử lý SA ---
+        // --- XỬ LÝ PHẦN III: TRẢ LỜI NGẮN ---
         const sas = part3.split(/Câu\s+\d+[:.]/gi).filter(q => q.trim() !== "");
         sas.forEach(raw => {
           const id = `${grade}${dateStr}${stt.toString().padStart(3, '0')}`;
@@ -72,37 +74,37 @@ const ExamCreator_gv = ({ onBack_gv }) => {
         });
 
         setFinalData_gv(finalRows);
-        // Tự động cập nhật số câu vào config cho thầy luôn!
+        // Cập nhật số câu tự động vào giao diện
         setConfig_gv(prev => ({...prev, mcqCount_gv: mcqs.length, tfCount_gv: tfs.length, saCount_gv: sas.length}));
-        alert(`✅ Đã nghiền xong ${finalRows.length} câu! Số lượng đã tự điền vào bảng.`);
-      } catch (err) { alert("⚠️ Lỗi: " + err.message); }
+        alert(`✅ Nghiền xong ${finalRows.length} câu. Mời thầy kiểm tra số lượng ở Bước 2!`);
+      } catch (err) { alert("⚠️ Lỗi bóc tách: " + err.message); }
     };
     reader.readAsArrayBuffer(file);
   };
 
-  // 3. GỬI DỮ LIỆU (Chỉ giữ 1 bản duy nhất)
+  // 3. GỬI DỮ LIỆU LÊN SERVER
   const handleSubmit_gv = async () => {
     const idgv = config_gv.idNumber_gv?.trim();
-    if (!idgv) return alert("⚠️ Thầy chưa nhập Mã xác minh!");
+    if (!idgv) return alert("⚠️ Thầy quên chưa nhập Mã xác minh kìa!");
+    if (finalData_gv.length === 0) return alert("⚠️ Dữ liệu trống! Thầy vui lòng up file Word trước.");
+
     const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL;
-
-    if (finalData_gv.length === 0) return alert("⚠️ Thầy chưa tải file Word!");
-
     const payload = { action: "saveFullExam", data: { ...config_gv, idNumber: idgv, questions: finalData_gv } };
+
     try {
       await fetch(GV_API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      alert("🚀 Tuyệt vời! Đề đã được đẩy lên hệ thống thành công!");
-    } catch (error) { alert("❌ Lỗi kết nối: " + error.message); }
+      alert("🚀 Bắn đề thành công! Hệ thống đang xử lý trên Cloud.");
+    } catch (error) { alert("❌ Lỗi: " + error.message); }
   };
 
-  // 4. LOAD DANH SÁCH & XÁC MINH (Giữ nguyên)
+  // 4. XÁC MINH & LOAD DỮ LIỆU (useEffect chạy 1 lần khi load trang)
   useEffect(() => {
     const loadIdGv = async () => {
       try {
         const resp = await fetch(`${DANHGIA_URL}?action=getIdGvList`);
         const result = await resp.json();
         if (result.status === 'success') setDsGiaoVien_gv(result.data);
-      } catch (err) { console.error("❌ Lỗi fetch GV:", err); }
+      } catch (err) { console.error("Lỗi tải danh sách GV", err); }
       finally { setLoading_gv(false); }
     };
     loadIdGv();
@@ -117,9 +119,10 @@ const ExamCreator_gv = ({ onBack_gv }) => {
       setConfig_gv(prev => ({ ...prev, idNumber_gv: idInput, imgURL_gv: gvMatch.img || "" }));
     } else {
       setIsVerified_gv(false);
-      alert("⚠️ ID chưa được cấp quyền!");
+      alert("⚠️ Mã ID không tồn tại!");
     }
   };
+
   return (
     <div className="p-4 md:p-8 bg-white rounded-[3rem] shadow-xl max-w-7xl mx-auto my-6 border border-slate-50 animate-in fade-in zoom-in duration-300">
       {/* HEADER */}
@@ -155,7 +158,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
               <label className="text-[10px] font-bold text-slate-500 ml-3 uppercase">Mã xác minh GV</label>
               <input 
                 type="text" 
-                placeholder={loading_gv ? "Đang tải dữ liệu..." : "Nhập ID để mở khóa..."}
+                placeholder={loading_gv ? "Đang tải..." : "Nhập ID mở khóa..."}
                 disabled={loading_gv}
                 className="w-full mt-1 p-4 rounded-2xl border-2 border-transparent bg-white shadow-sm focus:border-emerald-500 focus:ring-0 transition-all font-black text-blue-600 outline-none"
                 onBlur={(e) => handleVerify_gv(e.target.value)}
@@ -164,16 +167,16 @@ const ExamCreator_gv = ({ onBack_gv }) => {
             
             <div className={`space-y-4 transition-all duration-500 ${isVerified_gv ? "opacity-100 scale-100" : "opacity-20 pointer-events-none scale-95"}`}>
               <input 
-                placeholder="Tên mã đề thi viết liền..." 
+                placeholder="Tên mã đề thi..." 
                 className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500"
                 onChange={(e) => setConfig_gv({...config_gv, exams_gv: e.target.value})}
               />
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" placeholder="Times phút" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
-                <input type="number" placeholder="Max tab" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
+                <input type="number" placeholder="Phút" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" onChange={(e)=>setConfig_gv({...config_gv, fulltime_gv: e.target.value})} />
+                <input type="number" placeholder="Max Tab" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" onChange={(e)=>setConfig_gv({...config_gv, tab_gv: e.target.value})} />
               </div>
               <input 
-                placeholder="Nhập ID imgURL (Thư mục ảnh)..." 
+                placeholder="ID imgURL (Thư mục ảnh)..." 
                 className="w-full p-4 rounded-2xl border-none shadow-sm text-[10px] font-mono outline-none focus:ring-2 focus:ring-emerald-500"
                 value={config_gv.imgURL_gv}
                 onChange={(e) => setConfig_gv({...config_gv, imgURL_gv: e.target.value})}
@@ -188,61 +191,47 @@ const ExamCreator_gv = ({ onBack_gv }) => {
             <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <i className="fa-solid fa-list-check"></i> Bước 2: Cấu trúc & Tải tệp
             </p>
+            
             <div className="grid grid-cols-3 gap-4 mb-8">
-  {['MCQ', 'TF', 'SA'].map((type) => {
-    // Xác định field name tương ứng trong state config_gv
-    const countField = type.toLowerCase() + 'Count_gv'; 
-    const scoreField = type.toLowerCase() + 'Score_gv';
-    const label = type === 'MCQ' ? 'Trắc nghiệm' : type === 'TF' ? 'Đúng/Sai' : 'T.Lời ngắn';
+              {['MCQ', 'TF', 'SA'].map((type) => {
+                const countField = type.toLowerCase() + 'Count_gv'; 
+                const scoreField = type.toLowerCase() + 'Score_gv';
+                const label = type === 'MCQ' ? 'Trắc nghiệm' : type === 'TF' ? 'Đúng/Sai' : 'T.Lời ngắn';
 
-    return (
-      <div key={type} className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:border-emerald-500/50 transition-all group">
-        <p className="text-[10px] font-black text-emerald-500 mb-2 uppercase tracking-tighter">
-          {type} ({label})
-        </p>
-        
-        {/* Input Số câu - Tự động cập nhật khi upload Word */}
-        <div className="relative">
-          <input 
-            type="number" 
-            placeholder="Câu" 
-            value={config_gv[countField] || ''}
-            onChange={(e) => setConfig_gv({...config_gv, [countField]: parseInt(e.target.value) || 0})}
-            className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none mb-3 text-sm font-black text-white placeholder:text-slate-600 transition-colors" 
-          />
-          <span className="absolute right-0 top-0 text-[9px] text-slate-500 font-bold uppercase group-hover:text-emerald-500 transition-colors">Số câu</span>
-        </div>
+                return (
+                  <div key={type} className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:border-emerald-500/50 transition-all group">
+                    <p className="text-[10px] font-black text-emerald-500 mb-2 uppercase tracking-tighter">{type}</p>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        value={config_gv[countField] || ''}
+                        onChange={(e) => setConfig_gv({...config_gv, [countField]: parseInt(e.target.value) || 0})}
+                        className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none mb-3 text-sm font-black text-white" 
+                      />
+                      <span className="absolute right-0 top-0 text-[9px] text-slate-500 uppercase">Câu</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number" step="0.1" 
+                        value={config_gv[scoreField] || ''}
+                        onChange={(e) => setConfig_gv({...config_gv, [scoreField]: parseFloat(e.target.value) || 0})}
+                        className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none text-sm font-black text-emerald-400" 
+                      />
+                      <span className="absolute right-0 top-0 text-[9px] text-slate-500 uppercase">Điểm</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-        {/* Input Điểm số */}
-        <div className="relative">
-          <input 
-            type="number" 
-            step="0.1" 
-            placeholder="Điểm" 
-            value={config_gv[scoreField] || ''}
-            onChange={(e) => setConfig_gv({...config_gv, [scoreField]: parseFloat(e.target.value) || 0})}
-            className="w-full bg-transparent border-b border-white/20 focus:border-emerald-500 outline-none text-sm font-black text-emerald-400 placeholder:text-slate-600 transition-colors" 
-          />
-          <span className="absolute right-0 top-0 text-[9px] text-slate-500 font-bold uppercase group-hover:text-emerald-500 transition-colors">Tổng điểm</span>
-        </div>
-      </div>
-    );
-  })}
-</div>
-           {/* DROPZONE FILE WORD */}
-<div className="relative group border-2 border-dashed border-slate-700 rounded-[2rem] p-12 text-center hover:border-emerald-500 hover:bg-emerald-500/5 transition-all cursor-pointer">
-  {/* GẮN VÀO ĐÂY THẦY NHÉ */}
-  <input 
-    type="file" 
-    accept=".docx" 
-    onChange={handleFileUpload_gv} 
-    className="absolute inset-0 opacity-0 cursor-pointer" 
-  />
-  
-  <i className="fa-solid fa-cloud-arrow-up text-5xl text-emerald-500 mb-4 group-hover:scale-110 transition-transform"></i>
-  <h4 className="text-sm font-black uppercase tracking-tight">Tải đề Word (.docx)</h4>
-  <p className="text-[10px] text-slate-500 mt-2 font-medium italic">Hệ thống sẽ tự động bóc tách Câu hỏi, Đáp án và Hình ảnh</p>
-</div>
+            {/* DROPZONE */}
+            <div className="relative group border-2 border-dashed border-slate-700 rounded-[2rem] p-12 text-center hover:border-emerald-500 hover:bg-emerald-500/5 transition-all cursor-pointer">
+              <input type="file" accept=".docx" onChange={handleFileUpload_gv} className="absolute inset-0 opacity-0 cursor-pointer" />
+              <i className="fa-solid fa-cloud-arrow-up text-5xl text-emerald-500 mb-4 group-hover:scale-110 transition-transform"></i>
+              <h4 className="text-sm font-black uppercase">Tải đề Word (.docx)</h4>
+              <p className="text-[10px] text-slate-500 mt-2 italic">Hệ thống sẽ tự bóc tách Câu, Đáp án và Lời giải</p>
+            </div>
+
             <button onClick={handleSubmit_gv} className="w-full mt-8 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-sm">
               <i className="fa-solid fa-rocket"></i> Bắt đầu đẩy đề lên hệ thống
             </button>
