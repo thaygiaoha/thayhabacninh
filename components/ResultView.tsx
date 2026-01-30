@@ -193,6 +193,7 @@ React.useEffect(() => {
                 <div className="text-slate-700 leading-relaxed italic">
                  <MathText content={extractLoigiai(q.loigiai)} />
               </div>
+                </div>
             )}
           </div>
         </div>
