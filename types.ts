@@ -15,7 +15,6 @@ export interface Question {
   o?: string[];
   a?: string;
   s?: TrueFalseStatement[];
-  loigiai?: string;
   shuffledOptions?: string[];
  
 }
