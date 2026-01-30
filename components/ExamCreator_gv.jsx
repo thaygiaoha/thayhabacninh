@@ -115,8 +115,8 @@ const ExamCreator_gv = ({ onBack_gv }) => {
                 onChange={(e) => setConfig_gv({...config_gv, exams_gv: e.target.value})}
               />
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" placeholder="Phút làm" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
-                <input type="number" placeholder="Thoát Tab" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
+                <input type="number" placeholder="Times phút" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
+                <input type="number" placeholder="Max tab" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
               <input 
                 placeholder="imgURL (Thư mục ảnh)..." 
