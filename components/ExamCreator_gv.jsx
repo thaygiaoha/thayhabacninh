@@ -1,6 +1,7 @@
 import { DANHGIA_URL, API_ROUTING } from '../config';
 
 import React, { useState, useEffect } from 'react';
+import mammoth from 'mammoth';
 
 const ExamCreator_gv = ({ onBack_gv }) => {
   // 1. Quản lý trạng thái xác minh
@@ -8,6 +9,48 @@ const ExamCreator_gv = ({ onBack_gv }) => {
   const [gvName_gv, setGvName_gv] = useState("");
   const [dsGiaoVien_gv, setDsGiaoVien_gv] = useState([]);
   const [loading_gv, setLoading_gv] = useState(true);
+  // đếm số câu từ word
+const handleFileUpload_gv = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Hiển thị trạng thái đang đọc file cho GV yên tâm
+  console.log("正在读取文件..."); 
+  
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const arrayBuffer = e.target.result;
+    try {
+      // 1. Chuyển Word sang Text để phân tích
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      const text = result.value;
+
+      // 2. Bộ lọc Regex nhận diện (Cực chuẩn cho đề Toán)
+      // Nhận diện Câu 1, Câu 2...
+      const mcqMatches = text.match(/Câu\s+\d+[:.]/gi) || [];
+      
+      // Nhận diện câu Đúng/Sai (Dựa trên từ khóa hoặc định dạng [TF])
+      const tfMatches = text.match(/Chọn\s+đúng\s+hoặc\s+sai|\[TF\]/gi) || [];
+
+      // Nhận diện Trả lời ngắn (Dựa trên từ khóa [SA] hoặc "Câu ... trả lời")
+      const saMatches = text.match(/\[SA\]|Điền\s+đáp\s+số/gi) || [];
+
+      // 3. Cập nhật State để giao diện tự nhảy số
+      setConfig_gv(prev => ({
+        ...prev,
+        mcqCount_gv: mcqMatches.length - tfMatches.length - saMatches.length, // Trừ đi các câu đặc biệt
+        tfCount_gv: tfMatches.length,
+        saCount_gv: saMatches.length
+      }));
+
+      alert(`🚀 Phân tích xong!\n- Trắc nghiệm: ${mcqMatches.length - tfMatches.length - saMatches.length} câu\n- Đúng/Sai: ${tfMatches.length} câu\n- Trả lời ngắn: ${saMatches.length} câu`);
+
+    } catch (err) {
+      alert("❌ Lỗi: Không thể đọc file Word. Thầy kiểm tra lại file .docx nhé!");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+};
 
   // 2. Quản lý cấu hình đề thi (Khớp các cột A-M trong Sheet Exams)
   const [config_gv, setConfig_gv] = useState({
@@ -110,7 +153,7 @@ const ExamCreator_gv = ({ onBack_gv }) => {
             
             <div className={`space-y-4 transition-all duration-500 ${isVerified_gv ? "opacity-100 scale-100" : "opacity-20 pointer-events-none scale-95"}`}>
               <input 
-                placeholder="Tên mã đề thi..." 
+                placeholder="Tên mã đề thi viết liền..." 
                 className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500"
                 onChange={(e) => setConfig_gv({...config_gv, exams_gv: e.target.value})}
               />
@@ -143,11 +186,20 @@ const ExamCreator_gv = ({ onBack_gv }) => {
                 </div>
               ))}
             </div>
-            <div className="relative group border-2 border-dashed border-slate-700 rounded-[2rem] p-12 text-center hover:border-emerald-500 hover:bg-emerald-500/5 transition-all cursor-pointer">
-              <input type="file" accept=".docx" className="absolute inset-0 opacity-0 cursor-pointer" />
-              <i className="fa-solid fa-cloud-arrow-up text-5xl text-emerald-500 mb-4 group-hover:scale-110 transition-transform"></i>
-              <h4 className="text-sm font-black uppercase tracking-tight">Tải đề Word (.docx)</h4>
-            </div>
+           {/* DROPZONE FILE WORD */}
+<div className="relative group border-2 border-dashed border-slate-700 rounded-[2rem] p-12 text-center hover:border-emerald-500 hover:bg-emerald-500/5 transition-all cursor-pointer">
+  {/* GẮN VÀO ĐÂY THẦY NHÉ */}
+  <input 
+    type="file" 
+    accept=".docx" 
+    onChange={handleFileUpload_gv} 
+    className="absolute inset-0 opacity-0 cursor-pointer" 
+  />
+  
+  <i className="fa-solid fa-cloud-arrow-up text-5xl text-emerald-500 mb-4 group-hover:scale-110 transition-transform"></i>
+  <h4 className="text-sm font-black uppercase tracking-tight">Tải đề Word (.docx)</h4>
+  <p className="text-[10px] text-slate-500 mt-2 font-medium italic">Hệ thống sẽ tự động bóc tách Câu hỏi, Đáp án và Hình ảnh</p>
+</div>
             <button onClick={handleSubmit_gv} className="w-full mt-8 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-sm">
               <i className="fa-solid fa-rocket"></i> Bắt đầu đẩy đề lên hệ thống
             </button>
