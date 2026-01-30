@@ -21,7 +21,7 @@ export default function ExamCreator_gv() {
     setLoading_gv(true);
     setError_gv("");
 
-    const res = await fetch(`${DANHGIA_URL}?action=verifyGV`, {
+    const res = await fetch(`${DANHGIA_URL}?action=verifyGV_gv`, {
       method: "POST",
       body: JSON.stringify({
         idgv: idgv_gv,
