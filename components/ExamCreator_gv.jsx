@@ -122,6 +122,132 @@ export default function ExamCreator_gv() {
 
     setQuestions(result);
   };
+  // ==========Cấu hình đề thi=======
+  const saveExam_gv = async () => {
+  if (!apiGV_gv) return alert("Chưa xác minh GV");
+
+  const payload = {
+    action: "saveExam",
+    idExam,
+    idNumber,
+    fulltime,
+    mintime,
+    tab,
+    close,
+    imgURL,
+    MCQ,
+    scoreMCQ,
+    TF,
+    scoreTF,
+    SA,
+    scoreSA
+  };
+
+  const res = await fetch(apiGV_gv, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload)
+  }).then(r => r.json());
+
+  if (res.status === "success") {
+    alert("✅ Đã cấu hình đề thi");
+  } else {
+    alert("❌ Lỗi tạo cấu hình đề");
+  }
+};
+  // =========
+  const pushExamData_gv = async () => {
+  if (!questions.length) {
+    alert("Chưa có câu hỏi từ Word");
+    return;
+  }
+
+  const normalized = normalizeQuestions_gv(questions);
+
+  const res = await fetch(API_ROUTING[idgv_gv], {
+    method: "POST",
+    body: JSON.stringify({
+      action: "pushExamData",
+      idExam: examId_gv,
+      data: normalized
+    })
+  }).then(r => r.json());
+
+  if (res.status === "success") {
+    alert(`✅ Đã ghi ${normalized.length} câu vào exam_data`);
+  } else {
+    alert("❌ Lỗi ghi exam_data");
+  }
+};
+
+
+
+  // ================
+  const normalizeQuestions_gv = (rawQuestions) => {
+  return rawQuestions.map(q => {
+    return {
+      part: q.part,                 // I | II | III
+      type:
+        q.part === "I" ? "mcq" :
+        q.part === "II" ? "true-false" :
+        "short-answer",
+
+      question: q.question
+        .replace(/^Câu\s*\d+[\.:]?\s*/i, "") // XOÁ "Câu x"
+
+      options:
+        q.options && q.options.length
+          ? q.options.map(o => o.text.replace(/^[A-Da-d][\.\)]\s*/, ""))
+          : null,
+
+      answer: q.answer,
+      loigiai: q.explanation || ""
+    };
+  });
+};
+// ==============
+const saveExamConfig_gv = async () => {
+  setLoading_gv(true);
+
+  const payload = {
+    action: "saveExam",
+    idgv: idgv_gv,
+    data: {
+      IdExam: examId_gv,
+      IdNumber: idNumber_gv,
+      fulltime: fulltime_gv,
+      mintime: mintime_gv,
+      tab: tabLimit_gv,
+      close: closeTab_gv,
+      imgURL: imgURL_gv,
+
+      MCQ: mcqCount_gv,
+      scoremcq: scoreMcq_gv,
+      TF: tfCount_gv,
+      scoretf: scoreTf_gv,
+      SA: saCount_gv,
+      scoresa: scoreSa_gv
+    }
+  };
+
+  const res = await fetch(API_ROUTING[idgv_gv], {
+    method: "POST",
+    body: JSON.stringify(payload)
+  }).then(r => r.json());
+
+  setLoading_gv(false);
+
+  if (res.status === "success") {
+    alert("✅ Đã lưu cấu hình đề thi");
+  } else {
+    alert("❌ Lỗi lưu exams");
+  }
+};
+// ===============
+
+
+
+
 
   // ================== RENDER ==================
   return (
@@ -166,4 +292,19 @@ export default function ExamCreator_gv() {
     </div>
   );
 }
+<button
+  onClick={saveExamConfig_gv}
+  className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black"
+>
+  Lưu cấu hình đề thi
+</button>
+<button
+  onClick={pushExamData_gv}
+  className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black"
+>
+  Đẩy câu hỏi lên đề thi
+</button>
+
+
+
 export default ExamCreator_gv;
