@@ -135,17 +135,22 @@ export default function ExamCreator_gv() {
     setQuestions(result);
   };
 
-  const verifyGV_gv = async () => {
+ const verifyGV_gv = async () => {
     setLoading_gv(true);
+    // Sửa chỗ này: Gửi "idnumber" thay vì "idgv" để khớp Script cũ
     const res = await fetch(`${DANHGIA_URL}?action=verifyGV_gv`, {
       method: "POST",
-      body: JSON.stringify({ idgv: idgv_gv }),
+      body: JSON.stringify({ idnumber: idgv_gv }), // <-- Đổi idgv thành idnumber ở đây
     }).then(r => r.json());
+    
     setLoading_gv(false);
-    if (res.status === "success") { setVerified_gv(true); setGvInfo_gv(res.data); }
-    else setError_gv("ID không tồn tại");
+    if (res.status === "success") { 
+      setVerified_gv(true); 
+      setGvInfo_gv(res.data); 
+    } else { 
+      setError_gv("ID không tồn tại"); 
+    }
   };
-
   const saveAll_gv = async () => {
     setLoading_gv(true);
     try {
