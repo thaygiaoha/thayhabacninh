@@ -205,16 +205,21 @@ const ExamCreator_gv = ({ onBack_gv }) => {
                 onChange={(e) => setConfig_gv({...config_gv, exams_gv: e.target.value})}
               />
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" placeholder="Phút" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" onChange={(e)=>setConfig_gv({...config_gv, fulltime_gv: e.target.value})} />
-                <input type="number" placeholder="Max Tab" className="w-full p-4 rounded-2xl border-none shadow-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" onChange={(e)=>setConfig_gv({...config_gv, tab_gv: e.target.value})} />
-              </div>
-              <input 
-                placeholder="ID imgURL (Thư mục ảnh)..." 
-                className="w-full p-4 rounded-2xl border-none shadow-sm text-[10px] font-mono outline-none focus:ring-2 focus:ring-emerald-500"
-                value={config_gv.imgURL_gv}
-                onChange={(e) => setConfig_gv({...config_gv, imgURL_gv: e.target.value})}
-              />
-            </div>
+  <input 
+    type="number" 
+    placeholder="Times phút" 
+    className="..." 
+    value={config_gv.fulltime_gv}
+    onChange={(e) => setConfig_gv({...config_gv, fulltime_gv: e.target.value})} 
+  />
+  <input 
+    type="number" 
+    placeholder="Max tab" 
+    className="..." 
+    value={config_gv.tab_gv}
+    onChange={(e) => setConfig_gv({...config_gv, tab_gv: e.target.value})} 
+  />
+</div>
           </div>
         </div>
 
