@@ -14,8 +14,8 @@
     "lucide-react": "^0.344.0",
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.1",
-    "mammoth": "^1.7.0",       // <--- THIẾU CÁI NÀY ĐỂ ĐỌC ĐỀ WORD
-    "framer-motion": "^11.0.8" // <--- NÊN CÓ ĐỂ GIAO DIỆN "PHIÊU" HƠN
+    "mammoth": "^1.7.0",       
+    "framer-motion": "^11.0.8" 
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
