@@ -85,16 +85,49 @@ const ExamCreator_gv = ({ onBack_gv }) => {
   // 3. GỬI DỮ LIỆU LÊN SERVER
   const handleSubmit_gv = async () => {
     const idgv = config_gv.idNumber_gv?.trim();
-    if (!idgv) return alert("⚠️ Thầy quên chưa nhập Mã xác minh kìa!");
-    if (finalData_gv.length === 0) return alert("⚠️ Dữ liệu trống! Thầy vui lòng up file Word trước.");
+    if (!idgv) return alert("⚠️ Thầy chưa nhập Mã xác minh!");
+    
+    // Kiểm tra dữ liệu máy nghiền
+    if (finalData_gv.length === 0) return alert("⚠️ Thầy chưa tải file Word hoặc máy chưa nghiền xong!");
 
     const GV_API_URL = API_ROUTING[idgv] || DANHGIA_URL;
-    const payload = { action: "saveFullExam", data: { ...config_gv, idNumber: idgv, questions: finalData_gv } };
+
+    // 1. CHUẨN BỊ DỮ LIỆU CHO SHEET 'exams' (Cấu hình)
+    const examConfig = {
+      exams: config_gv.exams_gv,       // Cột A
+      idNumber: idgv,                  // Cột B
+      fulltime: config_gv.fulltime_gv, // Cột C
+      mintime: config_gv.mintime_gv,   // Cột D
+      tab: config_gv.tab_gv,           // E
+      close: config_gv.close_gv,       // F
+      imgURL: config_gv.imgURL_gv,     // G
+      mcqCount: config_gv.mcqCount_gv, mcqScore: config_gv.mcqScore_gv, // H, I
+      tfCount: config_gv.tfCount_gv,   tfScore: config_gv.tfScore_gv,   // J, K
+      saCount: config_gv.saCount_gv,   saScore: config_gv.saScore_gv    // L, M
+    };
+
+    // 2. CHUẨN BỊ DỮ LIỆU CHO SHEET 'exam_data' (Câu hỏi)
+    // finalData_gv hiện tại đang là mảng các dòng [id, classTag, content, date, loigiai]
+    const examQuestions = finalData_gv;
+
+    // ĐÓNG GÓI PAYLOAD
+    const payload = {
+      action: "saveFullExam", // Action này trong AppScript phải xử lý ghi vào 2 sheet
+      examConfig: examConfig,
+      examQuestions: examQuestions
+    };
 
     try {
-      await fetch(GV_API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      alert("🚀 Bắn đề thành công! Hệ thống đang xử lý trên Cloud.");
-    } catch (error) { alert("❌ Lỗi: " + error.message); }
+      const response = await fetch(GV_API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      alert("🚀 Đã bắn lệnh thành công! Thầy kiểm tra Sheet 'exams' và 'exam_data' nhé.");
+    } catch (error) {
+      alert("❌ Lỗi kết nối: " + error.message);
+    }
   };
 
   // 4. XÁC MINH & LOAD DỮ LIỆU (useEffect chạy 1 lần khi load trang)
