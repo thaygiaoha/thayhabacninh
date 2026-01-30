@@ -299,7 +299,7 @@ const handleDeepScan = () => {
   return groups;
 };
 
-  // --- 2. XÁC MINHXỬ LÝ NHẬP CÂU HỎI & SỬA LẺ (Giữ nguyên logic của thầy) ---
+  // --- 2. XÁC MINH XỬ LÝ NHẬP CÂU HỎI & SỬA LẺ (Giữ nguyên logic của thầy) ---
   const handleVerifyAdminOTP = () => {
     if (otp === "12345@" || otp === "6688@") setIsAdminVerified(true);
     else alert("Mã OTP sai!");
