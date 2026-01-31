@@ -9,7 +9,8 @@ interface LandingPageProps {
   user: AppUser | null;
   onOpenAuth: () => void;
   onOpenVip: () => void;
-  setView: (mode: 'cauhoi' | 'word') => void;
+  setView: (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
+  onOpenTeacherTask: () => void;
 }
 interface UserAcc {
   phoneNumber: string;
@@ -21,6 +22,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   user,
   onOpenAuth,
   onOpenVip,
+  onOpenTeacherTask,
   setView
 }) => {
   // --- GIỮ NGUYÊN TOÀN BỘ LOGIC DỮ LIỆU CỦA THẦY ---
@@ -49,6 +51,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [searchId, setSearchId] = useState('');
   const [foundLG, setFoundLG] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [currentImg, setCurrentImg] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // IMAGES_CAROUSEL lấy từ file config của thầy
+      setCurrentImg((prev) => (prev + 1) % (IMAGES_CAROUSEL?.length || 1));
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
 
 const [loadingLG, setLoadingLG] = useState(false); // Để hiện trạng thái đang tìm
@@ -672,7 +683,7 @@ const handleRedirect = () => {
 
             {/* QUẢN TRỊ */}
             <div className="mt-4 pt-6 border-t border-slate-100 flex flex-col gap-3 w-full">
-              <button onClick={() => setView('word')} className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl font-black text-xs uppercase shadow-lg border-b-4 border-emerald-800 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 group">
+              <button onClick={onOpenTeacherTask} className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl font-black text-xs uppercase shadow-lg border-b-4 border-emerald-800 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 group">
                 <i className="fas fa-chalkboard-teacher text-lg"></i>
                 <div className="flex flex-col items-start text-left">
                   <span className="leading-none mb-1 text-[11px]">Tạo đề từ Word</span>
