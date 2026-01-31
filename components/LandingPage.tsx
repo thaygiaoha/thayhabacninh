@@ -50,8 +50,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
  
   const [searchId, setSearchId] = useState('');
   const [foundLG, setFoundLG] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [currentImg, setCurrentImg] = useState(0);
+  const [showModal, setShowModal] = useState(false); 
 
   useEffect(() => {
     const timer = setInterval(() => {
