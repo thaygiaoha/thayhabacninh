@@ -15,7 +15,7 @@ import TeacherWordTask from './components/TeacherWordTask';
 
 const App: React.FC = () => {
   // Thêm 'admin' vào danh sách các View
-const [currentView, setCurrentView] = useState<'landing' | 'portal' | 'quiz' | 'result' | 'admin'>('landing');
+const [currentView, setCurrentView] = useState<'landing' | 'portal' | 'quiz' | 'result' | 'admin' | 'teacher_task'>('landing');
 // Thêm state để biết đang mở Ma trận hay Nhập câu hỏi
 const [adminMode, setAdminMode] = useState<'matran' | 'cauhoi' | 'word'>('matran'); 
 const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
@@ -26,6 +26,7 @@ const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
+  
 
   // Trong useEffect của App.tsx
 useEffect(() => {
@@ -123,26 +124,34 @@ useEffect(() => {
 
         <main className="flex-grow max-w-[1400px] mx-auto w-full p-4 md:p-10">
           <div className="flex flex-col gap-6">
-             {currentView === 'landing' && (
+{currentView === 'landing' && (
   <LandingPage 
     user={user} 
     onOpenAuth={() => setShowAuth(true)} 
     onOpenVip={() => user ? setShowVipModal(true) : setShowAuth(true)}
-    onSelectGrade={(grade) => { setSelectedGrade(grade); setCurrentView('portal'); }} 
+    onSelectGrade={(grade) => { setSelectedGrade(grade.toString()); setCurrentView('portal'); }} 
     onSelectQuiz={handleStartQuizMode}
-    // SỬA DÒNG NÀY: Đảm bảo set đúng mode được truyền từ LandingPage sang
-    setView={(mode: any) => { 
-      setAdminMode(mode); 
-      setCurrentView('admin'); 
-    }}
+    setView={(mode: any) => {
+      if (mode === 'word' || mode === 'matran') {
+        setCurrentView('teacher_task'); 
+        setAdminMode(mode);
+      } else {
+        setAdminMode(mode);
+        setCurrentView('admin');
+      }
+    }} 
   />
-)}
+)} {/* <--- Đảm bảo có cặp này: )} */}
               {currentView === 'admin' && (
                 <AdminPanel 
               mode={adminMode} 
               onBack={goHome} 
               />
                 )}
+        {/* VIEW GIÁO VIÊN TỪ APP1 */}
+      {currentView === 'teacher_task' && (
+           <TeacherWordTask mode={adminMode} onBack={goHome} />
+      )}
               {currentView === 'portal' && selectedGrade && (
                 <ExamPortal grade={selectedGrade.toString()} onBack={goHome} onStart={handleStartExam} />
               )}
