@@ -673,7 +673,7 @@ const handleRedirect = () => {
 
             {/* QUẢN TRỊ */}
             <div className="mt-4 pt-6 border-t border-slate-100 flex flex-col gap-3 w-full">
-              <button onClick={onOpenTeacherTask} className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl font-black text-xs uppercase shadow-lg border-b-4 border-emerald-800 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 group">
+              <button onClick={() => setView('word')} className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl font-black text-xs uppercase shadow-lg border-b-4 border-emerald-800 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 group">
                 <i className="fas fa-chalkboard-teacher text-lg"></i>
                 <div className="flex flex-col items-start text-left">
                   <span className="leading-none mb-1 text-[11px]">Tạo đề từ Word</span>
