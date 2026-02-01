@@ -24,42 +24,115 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
-  // ====== Xác minh GV Word =======
+  // ====== Ghi exam tương tự ma trận ======
+  const handleSaveMatrix = async () => {
+  if (!idgv) {
+    alert("❌ Lỗi: Không xác định được ID Giáo viên!");
+    return;
+  }
 
-   const handleVerify = async () => {
-    if (!gvId) return alert("Vui lòng nhập ID!");
-    setLoading(true);
-    try {
-      const res = await fetch(`${DANHGIA_URL}?action=checkTeacher&idgv=${gvId}`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setGvData(data.data);
-        setStep('work');
-      } else { alert(data.message); }
-    } catch (e) { alert("Lỗi xác minh!"); }
-    finally { setLoading(false); }
+  // Tự động chọn Link Script dựa trên mã IDGV (8888 hoặc 9999)
+  const targetURL = API_ROUTING[idgv] || DEFAULT_API_URL;
+
+  const payload = {
+    gvId: idgv,
+    makiemtra: maTranForm.makiemtra,
+    name: maTranForm.name,
+    duration: maTranForm.duration,
+    topics: maTranForm.topics,
+    numMC: maTranForm.numMC,
+    scoreMC: maTranForm.scoreMC,
+    mcL3: maTranForm.mcL3,
+    mcL4: maTranForm.mcL4,
+    numTF: maTranForm.numTF,
+    scoreTF: maTranForm.scoreTF,
+    tfL3: maTranForm.tfL3,
+    tfL4: maTranForm.tfL4,
+    numSA: maTranForm.numSA,
+    scoreSA: maTranForm.scoreSA,
+    saL3: maTranForm.saL3,
+    saL4: maTranForm.saL4
   };
-// ======= Ghi cấu hình vào exam =======
-  const handleSaveConfig = async () => {
-    if (!examForm.exams) return alert("Vui lòng nhập mã đề (exams)!");
+
+  try {
+    // ⚠️ QUAN TRỌNG: Phải có ?action=saveMatrix trên URL
+    const response = await fetch(`${targetURL}?action=saveMatrix`, {
+      method: "POST",
+      mode: "cors", // Chuyển về cors để nhận dữ liệu trả về
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json(); // Đợi Script trả về kết quả JSON
+
+    if (result.status === "success") {
+      alert(result.message); // Hiện thông báo xanh từ Script
+    } else {
+      alert("⚠️ Lỗi Script: " + result.message);
+    }
+  } catch (e) {
+    console.error(e);
+    alert("❌ Lỗi kết nối! Dữ liệu có thể đã ghi nhưng không nhận được phản hồi.");
+  }
+};
+ // ====== 1. Xác minh GV Word =======
+const handleVerifyW = async () => {
+  if (!gvId) return alert("Vui lòng nhập ID!");
+  setLoading(true);
+  try {
+    // Gọi đến Script Master để check xem GV này là ai, file ở đâu
+    const res = await fetch(`${DANHGIA_URL}?action=checkTeacher&idgv=${gvId}`);
+    const data = await res.json();
     
-    // CẢNH BÁO TRÙM MÃ ĐỀ
-    const confirmSave = window.confirm(`Hệ thống sẽ lưu cấu hình cho mã đề [${examForm.exams}].\n\nNếu mã này đã tồn tại, dữ liệu cũ sẽ bị ghi đè/chèn thêm.\n\nBấm [OK] để Đồng ý hoặc [Cancel] để nhập mã khác.`);
-    if (!confirmSave) return;
+    if (data.status === 'success') {
+      // data.data bao gồm: { name: "Tên GV", link: "Link Spreadsheet riêng" }
+      setGvData(data.data); 
+      setStep('work'); // Chuyển sang bước làm việc
+    } else { 
+      alert(data.message); 
+    }
+  } catch (e) { 
+    alert("Lỗi xác minh hệ thống!"); 
+  } finally { 
+    setLoading(false); 
+  }
+};
 
-    setLoading(true);
-    try {
-      const payload = { action: 'saveExamConfig', idgv: gvId, ...examForm };
-      const targetUrl = API_ROUTING[gvId] || DEFAULT_API_URL;
-      const res = await fetch(`${targetUrl}?action=saveExamConfig`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      alert(result.message);
-    } catch (e) { alert("Lỗi lưu dữ liệu!"); }
-    finally { setLoading(false); }
-  };
+// ======= 2. Ghi cấu hình vào file riêng của GV =======
+const handleSaveConfig = async () => {
+  if (!examForm.exams) return alert("Vui lòng nhập mã đề!");
+  
+  const confirmSave = window.confirm(`Lưu cấu hình mã đề [${examForm.exams}] vào file riêng của bạn?`);
+  if (!confirmSave) return;
+
+  setLoading(true);
+  try {
+    // Lấy link file riêng đã lưu lúc xác minh
+    // Nếu GV không có link riêng, sẽ dùng link Master mặc định
+    const targetUrl = gvData.link || DANHGIA_URL; 
+
+    const payload = { 
+      action: 'saveExamConfig', 
+      idgv: gvId, 
+      ...examForm 
+    };
+
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      mode: 'no-cors', // Dùng no-cors nếu gặp lỗi chặn trình duyệt, hoặc để mặc định
+      body: JSON.stringify(payload)
+    });
+
+    // Vì Google Script Apps đôi khi trả về redirect, 
+    // nếu dùng fetch POST thuần túy có thể không đọc được JSON ngay
+    alert("Đã gửi yêu cầu lưu cấu hình!"); 
+    
+  } catch (e) { 
+    alert("Lỗi kết nối khi lưu dữ liệu!"); 
+  } finally { 
+    setLoading(false); 
+  }
+};
 // ========== xử lý file Word =====
   const processWordFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -164,7 +237,8 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
         <div className="flex flex-col items-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
           <i className="fas fa-user-shield text-6xl text-indigo-300 mb-6"></i>
           <input type="text" placeholder="NHẬP ID GIÁO VIÊN..." className="w-full max-w-md p-5 bg-white border-4 border-slate-100 rounded-2xl text-center font-black text-2xl uppercase" value={gvId} onChange={e => setGvId(e.target.value)} />
-          <button onClick={handleVerify} disabled={loading} className="mt-6 px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl uppercase">
+          <button onClick={handleVerifyW} 
+            disabled={loading} className="mt-6 px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl uppercase">
             {loading ? 'ĐANG XÁC MINH...' : 'VÀO HỆ THỐNG'}
           </button>
         </div>
