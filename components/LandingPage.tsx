@@ -52,16 +52,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [foundLG, setFoundLG] = useState(null);
   const [showModal, setShowModal] = useState(false); 
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      // IMAGES_CAROUSEL lấy từ file config của thầy
-      setCurrentImg((prev) => (prev + 1) % (IMAGES_CAROUSEL?.length || 1));
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-
-const [loadingLG, setLoadingLG] = useState(false); // Để hiện trạng thái đang tìm
+ const [loadingLG, setLoadingLG] = useState(false); // Để hiện trạng thái đang tìm
   const toArray = (v: any) => {
   if (Array.isArray(v)) return v;
   if (!v) return [];
