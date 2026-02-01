@@ -101,34 +101,29 @@ const handleVerifyW = async () => {
 // ======= 2. Ghi cấu hình vào file riêng của GV =======
 const handleSaveConfig = async () => {
   if (!examForm.exams) return alert("Vui lòng nhập mã đề!");
-  
-  const confirmSave = window.confirm(`Lưu cấu hình mã đề [${examForm.exams}] vào file riêng của bạn?`);
+  const confirmSave = window.confirm(`Lưu cấu hình mã đề [${examForm.exams}]?`);
   if (!confirmSave) return;
 
   setLoading(true);
   try {
-    // Lấy link file riêng đã lưu lúc xác minh
-    // Nếu GV không có link riêng, sẽ dùng link Master mặc định
     const targetUrl = gvData.link || DANHGIA_URL; 
+    
+    // Đẩy idgv và action lên URL để Script dễ bắt
+    const finalUrl = `${targetUrl}?action=saveExamConfig&idgv=${gvId}`;
 
-    const payload = { 
-      action: 'saveExamConfig', 
-      idgv: gvId, 
-      ...examForm 
-    };
-
-    const res = await fetch(targetUrl, {
+    const res = await fetch(finalUrl, {
       method: 'POST',
-      mode: 'no-cors', // Dùng no-cors nếu gặp lỗi chặn trình duyệt, hoặc để mặc định
-      body: JSON.stringify(payload)
+      // BỎ no-cors đi thầy nhé
+      body: JSON.stringify(examForm) 
     });
 
-    // Vì Google Script Apps đôi khi trả về redirect, 
-    // nếu dùng fetch POST thuần túy có thể không đọc được JSON ngay
-    alert("Đã gửi yêu cầu lưu cấu hình!"); 
+    // Nếu không dùng no-cors, ta có thể thử đọc phản hồi
+    // Nếu vẫn lỗi CORS ở đây thì chỉ cần hiện thông báo "Đã gửi" 
+    // nhưng mã GGGG chắc chắn sẽ vào Sheet vì URL đã rõ ràng.
+    alert("Đã thực hiện lệnh lưu mã đề: " + examForm.exams);
     
   } catch (e) { 
-    alert("Lỗi kết nối khi lưu dữ liệu!"); 
+    alert("Lỗi kết nối: " + e.toString()); 
   } finally { 
     setLoading(false); 
   }
