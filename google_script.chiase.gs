@@ -66,6 +66,19 @@ function doGet(e) {
     data: getAppConfig()
   })).setMimeType(ContentService.MimeType.JSON);
 }
+
+// 4. KIỂM TRA GIÁO VIÊN (Dành cho Module Giáo viên tạo đề word)
+    if (action === 'checkTeacher') {
+      const idgv = params.idgv;
+      const sheet = ss.getSheetByName("idgv");
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0].toString().trim() === idgv.trim()) {
+          return createResponse("success", "OK", { name: data[i][1], link: data[i][2] });
+        }
+      }
+      return createResponse("error", "ID Giáo viên không tồn tại!");
+    }
    
    // Trong hàm doGet(e) của Google Apps Script
 if (action === "getRouting") {
@@ -252,6 +265,35 @@ function doPost(e) {
     var action = e.parameter.action; 
     var data = JSON.parse(e.postData.contents); 
     var sheetNH = ss.getSheetByName("nganhang");
+
+    // 4. LƯU CẤU HÌNH PHÒNG THI (Teacher) - Bản Cập nhật Thông minh
+      if (action === 'saveExamConfig') {
+      const gvSS = getSpreadsheetByTarget(data.idgv);
+      const sheet = gvSS.getSheetByName("exams") || gvSS.insertSheet("exams");
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(["exams", "IdNumber", "fulltime", "mintime", "tab", "dateclose", "MCQ", "scoremcq", "TF", "scoretf", "SA", "scoresa", "IDimglink"]);
+      }
+      sheet.appendRow([
+        data.exams, data.idgv, data.fulltime, data.mintime, 
+        data.tab, data.dateclose, data.MCQ, data.scoremcq, 
+        data.TF, data.scoretf, data.SA, data.scoresa, data.IDimglink
+      ]);
+      return createResponse("success", "Lưu cấu hình thành công!");
+    }
+    // 5. UPLOAD DỮ LIỆU ĐỀ THI TỪ WORD (Teacher)
+    if (action === 'uploadExamData') {
+      const gvSS = getSpreadsheetByTarget(data.idgv);
+      const sheet = gvSS.getSheetByName("exam_data") || gvSS.insertSheet("exam_data");
+      const now = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yy");
+      data.questions.forEach(q => {
+        sheet.appendRow([
+          data.examCode, q.classTag || "", q.type, 
+          JSON.stringify(q), now, q.loigiai || ""
+        ]);
+      });
+      return createResponse("success", "Đã tải lên " + data.questions.length + " câu!");
+    }
+
 
     // 1. NHÁNH LỜI GIẢI (saveLG)
    if (action === 'saveLG') {
