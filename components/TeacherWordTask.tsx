@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import mammoth from 'mammoth';
-import { DANHGIA_URL, DEFAULT_API_URL, API_ROUTING } from '../config';
+import { DANHGIA_URL, API_ROUTING } from '../config';
 
 interface TeacherWordTaskProps {
   onBack: () => void;
@@ -29,7 +29,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
     if (!gvId) return alert("Vui lòng nhập ID!");
     setLoading(true);
     try {
-      const targetUrl = API_ROUTING[gvId.trim()] || DEFAULT_API_URL;
+      const targetUrl = API_ROUTING[gvId.trim()] || DANHGIA_URL;
       const res = await fetch(`${targetUrl}?action=checkTeacher&idgv=${gvId}`);
       const data = await res.json();
       if (data.status === 'success') {
@@ -50,7 +50,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
     setLoading(true);
     try {
       const payload = { action: 'saveExamConfig', idgv: gvId, ...examForm };
-      const targetUrl = API_ROUTING[gvId] || DEFAULT_API_URL;
+      const targetUrl = API_ROUTING[gvId] || DANHGIA_URL;
       const res = await fetch(`${targetUrl}?action=saveExamConfig`, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -144,7 +144,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
     setLoading(true);
     try {
       const payload = { action: 'uploadExamData', idgv: gvId, examCode: examForm.exams, questions };
-      const targetUrl = API_ROUTING[gvId] || DEFAULT_API_URL;
+      const targetUrl = API_ROUTING[gvId] || DANHGIA_URL;
       const res = await fetch(`${targetUrl}?action=uploadExamData`, { method: 'POST', body: JSON.stringify(payload) });
       const result = await res.json();
       alert(result.message);
