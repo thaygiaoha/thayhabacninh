@@ -13,6 +13,7 @@ import AdminPanel from '@/components/AdminManager';
 import TeacherWordTask from '@/components/TeacherWordTask';
 // Thêm dấu ngoặc nhọn bao quanh tên hàm
 import { fetchQuestionsBank } from '@/questions';
+import { fetchQuestionsBankW } from '@/questionsWord';
 const App: React.FC = () => {
   // 1. Quản lý các màn hình (Views)
   const [currentView, setCurrentView] = useState<'landing' | 'portal' | 'quiz' | 'result' | 'admin' | 'teacher_task'>('landing');
@@ -38,6 +39,7 @@ const App: React.FC = () => {
           fetchAdminConfig(),
           fetchApiRouting(),
           fetchQuestionsBank()
+          fetchQuestionsBankW()
         ]);
         console.log("✅ Tất cả dữ liệu đã nạp xong!");
       } catch (e) {
