@@ -60,11 +60,11 @@ export const pickQuestionsSmart = (
       const typePool = pool.filter(q => q.type === type);
       
       // Lọc mức độ 3 và 4
-      const p4 = typePool.filter(q => q.classTag.toString().endsWith(".4"));
-      const p3 = typePool.filter(q => q.classTag.toString().endsWith(".3"));
+      const p4 = typePool.filter(q => q.classTag.toString().endsWith(".d"));
+      const p3 = typePool.filter(q => q.classTag.toString().endsWith(".c"));
       const pOther = typePool.filter(q => 
-        !q.classTag.toString().endsWith(".3") && 
-        !q.classTag.toString().endsWith(".4")
+        !q.classTag.toString().endsWith(".c") && 
+        !q.classTag.toString().endsWith(".d")
       );
 
       let res4 = shuffleArray(p4).slice(0, l4);
