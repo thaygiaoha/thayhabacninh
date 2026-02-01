@@ -24,6 +24,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  // ====== Xác minh GV Word =======
 
    const handleVerify = async () => {
     if (!gvId) return alert("Vui lòng nhập ID!");
@@ -38,7 +39,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
     } catch (e) { alert("Lỗi xác minh!"); }
     finally { setLoading(false); }
   };
-
+// ======= Ghi cấu hình vào exam =======
   const handleSaveConfig = async () => {
     if (!examForm.exams) return alert("Vui lòng nhập mã đề (exams)!");
     
@@ -59,7 +60,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
     } catch (e) { alert("Lỗi lưu dữ liệu!"); }
     finally { setLoading(false); }
   };
-
+// ========== xử lý file Word =====
   const processWordFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
