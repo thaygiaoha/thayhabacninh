@@ -2,7 +2,7 @@
 import { Question } from './types';
 import { DANHGIA_URL, API_ROUTING } from './config';
 
-export let questionsBank: Question[] = [];
+export let questionsBankW: Question[] = [];
 
 export const fetchQuestionsBankW = async (): Promise<Question[]> => {
   try {
