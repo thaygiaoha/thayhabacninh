@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Student, ExamResult, Question, AppUser } from './types';
 import { API_ROUTING, DEFAULT_API_URL, DANHGIA_URL, fetchApiRouting, fetchQuestionsBank, fetchAdminConfig } from './config';
-import LandingPage from './components/LandingPage';
-import ExamPortal from './components/ExamPortal';
+import LandingPage from '@/components/LandingPage';
+import ExamPortal from '@/components/ExamPortal';
 import QuizInterface from './components/QuizInterface';
 import ResultView from './components/ResultView';
 import Footer from './components/Footer';
