@@ -177,7 +177,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
   return (
     <div className="p-4 md:p-10 max-w-6xl mx-auto font-sans bg-white rounded-[3rem] shadow-2xl my-10 border border-slate-50">
       <div className="flex justify-between items-center mb-10">
-        <h2 className="text-3xl font-black text-indigo-700 uppercase italic">Quản lý Giáo Viên & Word</h2>
+        <h2 className="text-3xl font-black text-indigo-700 uppercase">Quản lý Giáo Viên & Word</h2>
         <button onClick={onBack} className="bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-500 px-6 py-2 rounded-full font-black">THOÁT</button>
       </div>
 
