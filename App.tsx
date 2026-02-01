@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Student, ExamResult, Question, AppUser } from './types';
-import { API_ROUTING, DEFAULT_API_URL, DANHGIA_URL, fetchApiRouting, fetchQuestionsBank, fetchAdminConfig } from './config';
+import { API_ROUTING, DEFAULT_API_URL, DANHGIA_URL, fetchApiRouting, fetchAdminConfig } from './config';
 import LandingPage from '@/components/LandingPage';
 import ExamPortal from '@/components/ExamPortal';
 import QuizInterface from './components/QuizInterface';
@@ -10,7 +10,7 @@ import { getRandomQuizQuestion } from './questionquiz';
 import { AppProvider } from './contexts/AppContext';
 import AdminPanel from './components/AdminManager';
 import TeacherWordTask from './components/TeacherWordTask';
-
+import fetchQuestionsBank from '../questions;
 const App: React.FC = () => {
   // 1. Quản lý các màn hình (Views)
   const [currentView, setCurrentView] = useState<'landing' | 'portal' | 'quiz' | 'result' | 'admin' | 'teacher_task'>('landing');
