@@ -11,7 +11,8 @@ import { getRandomQuizQuestion } from '@/questionquiz'; // Giả sử file này 
 import { AppProvider } from '@/contexts/AppContext';
 import AdminPanel from '@/components/AdminManager';
 import TeacherWordTask from '@/components/TeacherWordTask';
-import fetchQuestionsBank from '@/questions'; // Dùng @ để trỏ thẳng vào src/questions
+// Thêm dấu ngoặc nhọn bao quanh tên hàm
+import { fetchQuestionsBank } from '@/questions';
 const App: React.FC = () => {
   // 1. Quản lý các màn hình (Views)
   const [currentView, setCurrentView] = useState<'landing' | 'portal' | 'quiz' | 'result' | 'admin' | 'teacher_task'>('landing');
