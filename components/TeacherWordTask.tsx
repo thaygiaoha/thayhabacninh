@@ -25,7 +25,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const handleVerify = async () => {
+  const handleVerifyW = async () => {
     if (!gvId) return alert("Vui lòng nhập ID!");
     setLoading(true);
     try {
@@ -164,7 +164,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
         <div className="flex flex-col items-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
           <i className="fas fa-user-shield text-6xl text-indigo-300 mb-6"></i>
           <input type="text" placeholder="NHẬP ID GIÁO VIÊN..." className="w-full max-w-md p-5 bg-white border-4 border-slate-100 rounded-2xl text-center font-black text-2xl uppercase" value={gvId} onChange={e => setGvId(e.target.value)} />
-          <button onClick={handleVerify} disabled={loading} className="mt-6 px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl uppercase">
+          <button onClick={handleVerifyW} disabled={loading} className="mt-6 px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl uppercase">
             {loading ? 'ĐANG XÁC MINH...' : 'VÀO HỆ THỐNG'}
           </button>
         </div>
