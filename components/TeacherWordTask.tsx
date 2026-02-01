@@ -25,12 +25,11 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const handleVerifyW = async () => {
+   const handleVerifyW = async () => {
     if (!gvId) return alert("Vui lòng nhập ID!");
     setLoading(true);
     try {
-      const targetUrl = API_ROUTING[gvId.trim()] || DANHGIA_URL;
-      const res = await fetch(`${targetUrl}?action=checkTeacher&idgv=${gvId}`);
+      const res = await fetch(`${DANHGIA_URL}?action=checkTeacher&idgv=${gvId}`);
       const data = await res.json();
       if (data.status === 'success') {
         setGvData(data.data);
@@ -41,46 +40,25 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
   };
 
   const handleSaveConfig = async () => {
-  if (!examForm.exams) return alert("Vui lòng nhập mã đề (exams)!");
-  
-  const confirmSave = window.confirm(`Hệ thống sẽ lưu cấu hình cho mã đề [${examForm.exams}].\n\nBấm [OK] để Đồng ý.`);
-  if (!confirmSave) return;
+    if (!examForm.exams) return alert("Vui lòng nhập mã đề (exams)!");
+    
+    // CẢNH BÁO TRÙM MÃ ĐỀ
+    const confirmSave = window.confirm(`Hệ thống sẽ lưu cấu hình cho mã đề [${examForm.exams}].\n\nNếu mã này đã tồn tại, dữ liệu cũ sẽ bị ghi đè/chèn thêm.\n\nBấm [OK] để Đồng ý hoặc [Cancel] để nhập mã khác.`);
+    if (!confirmSave) return;
 
-  setLoading(true);
-  try {
-    const payload = { 
-      action: 'saveExamConfig', 
-      idgv: gvId.trim(), 
-      ...examForm 
-    };
-
-    const targetUrl = API_ROUTING[gvId.trim()] || DANHGIA_URL;
-
-    // SỬA Ở ĐÂY: Thêm Headers để Script nhận diện được JSON
-    const res = await fetch(targetUrl, {
-      method: 'POST',
-      // Lưu ý: Không dùng no-cors nếu muốn nhận result.message trả về
-      body: JSON.stringify(payload) 
-    });
-
-    // Vì Google Script trả về text/redirect, ta nên dùng text() rồi mới parse
-    const txt = await res.text();
+    setLoading(true);
     try {
-      const result = JSON.parse(txt);
+      const payload = { action: 'saveExamConfig', idgv: gvId, ...examForm };
+      const targetUrl = API_ROUTING[gvId] || DEFAULT_API_URL;
+      const res = await fetch(`${targetUrl}?action=saveExamConfig`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
       alert(result.message);
-    } catch(err) {
-      // Trường hợp Google Script trả về dạng HTML redirect
-      alert("Đã gửi yêu cầu lưu cấu hình!"); 
-      console.log("Phản hồi từ Script:", txt);
-    }
-
-  } catch (e) { 
-    console.error(e);
-    alert("Lỗi kết nối máy chủ khi lưu cấu hình!"); 
-  } finally { 
-    setLoading(false); 
-  }
-};
+    } catch (e) { alert("Lỗi lưu dữ liệu!"); }
+    finally { setLoading(false); }
+  };
 
   const processWordFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
