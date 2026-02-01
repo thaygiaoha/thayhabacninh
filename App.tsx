@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Student, ExamResult, Question, AppUser } from './types';
 import { API_ROUTING, DEFAULT_API_URL, DANHGIA_URL, fetchApiRouting, fetchAdminConfig } from './config';
+// Sửa lại đoạn này trong App.tsx của thầy:
 import LandingPage from '@/components/LandingPage';
 import ExamPortal from '@/components/ExamPortal';
-import QuizInterface from './components/QuizInterface';
-import ResultView from './components/ResultView';
-import Footer from './components/Footer';
-import { getRandomQuizQuestion } from './questionquiz';
-import { AppProvider } from './contexts/AppContext';
-import AdminPanel from './components/AdminManager';
-import TeacherWordTask from './components/TeacherWordTask';
-import fetchQuestionsBank from '../questions;
+import QuizInterface from '@/components/QuizInterface';
+import ResultView from '@/components/ResultView';
+import Footer from '@/components/Footer';
+import { getRandomQuizQuestion } from '@/questionquiz'; // Giả sử file này ở src/questionquiz
+import { AppProvider } from '@/contexts/AppContext';
+import AdminPanel from '@/components/AdminManager';
+import TeacherWordTask from '@/components/TeacherWordTask';
+import fetchQuestionsBank from '@/questions'; // Dùng @ để trỏ thẳng vào src/questions
 const App: React.FC = () => {
   // 1. Quản lý các màn hình (Views)
   const [currentView, setCurrentView] = useState<'landing' | 'portal' | 'quiz' | 'result' | 'admin' | 'teacher_task'>('landing');
