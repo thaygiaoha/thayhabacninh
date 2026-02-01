@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DANHGIA_URL } from '../config';
+import { DANHGIA_URL, API_ROUTING } from '../config';
 
 const AdminPanel = ({ mode, onBack }) => {
   const [currentTab, setCurrentTab] = useState(mode || 'cauhoi');
