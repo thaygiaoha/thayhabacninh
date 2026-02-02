@@ -6,6 +6,7 @@ const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 /*************************************************
  * HÀM TIỆN ÍCH: TẠO RESPONSE JSON
  *************************************************/
+
 function createResponse(status, message, data) {
   const output = { status: status, message: message };
   if (data) output.data = data;
@@ -37,7 +38,32 @@ function doGet(e) {
   const params = e.parameter;
   const type = params.type;
   const action = params.action;
- 
+
+  if (action === 'checkTeacher') {
+    try {
+      const idInput = (params.idgv || "").toString().trim();
+      if (!idInput) return createResponse("error", "Chưa nhập ID giáo viên");
+
+      const sheet = ss.getSheetByName("idgv");
+      const data = sheet.getDataRange().getValues();
+
+      for (let i = 1; i < data.length; i++) {
+        // Ép cả 2 về String để so sánh cho chuẩn
+        let idInSheet = data[i][0].toString().trim();
+        
+        if (idInSheet === idInput) {
+          return createResponse("success", "OK", { 
+            name: data[i][1], 
+            link: data[i][2] 
+          });
+        }
+      }
+      return createResponse("error", "Không tìm thấy ID: " + idInput);
+    } catch (err) {
+      return createResponse("error", "Lỗi Script: " + err.toString());
+    }
+  }
+  
   
   if (action === 'getLG') {
      const sheetNH = ss.getSheetByName("nganhang");
@@ -68,17 +94,7 @@ function doGet(e) {
 }
 
 // 4. KIỂM TRA GIÁO VIÊN (Dành cho Module Giáo viên tạo đề word)
-    if (action === 'checkTeacher') {
-      const idgv = params.idgv;
-      const sheet = ss.getSheetByName("idgv");
-      const data = sheet.getDataRange().getValues();
-      for (let i = 1; i < data.length; i++) {
-        if (data[i][0].toString().trim() === idgv.trim()) {
-          return createResponse("success", "OK", { name: data[i][1], link: data[i][2] });
-        }
-      }
-      return createResponse("error", "ID Giáo viên không tồn tại!");
-    }
+    
    
    // Trong hàm doGet(e) của Google Apps Script
 if (action === "getRouting") {
@@ -258,27 +274,55 @@ if (action === "getRouting") {
 /*************************************************
  * HÀM XỬ LÝ POST REQUEST
  *************************************************/
-function doPost(e) {
+    function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.tryLock(15000);
   try {
-    var action = e.parameter.action; 
-    var data = JSON.parse(e.postData.contents); 
-    var sheetNH = ss.getSheetByName("nganhang");
+    const idgv = (e.parameter.idgv || JSON.parse(e.postData.contents).idgv || "").toString().trim();
+    const action = e.parameter.action || JSON.parse(e.postData.contents).action;
+    
+    const data = JSON.parse(e.postData.contents);
+   
+   
+    const sheetNH = ss.getSheetByName("nganhang");  
 
-    // 4. LƯU CẤU HÌNH PHÒNG THI (Teacher) - Bản Cập nhật Thông minh
-      if (action === 'saveExamConfig') {
-      const gvSS = getSpreadsheetByTarget(data.idgv);
-      const sheet = gvSS.getSheetByName("exams") || gvSS.insertSheet("exams");
+   // 1. NHÁNH LƯU CẤU HÌNH (Ổn định theo kiểu saveMatrix)
+    if (action === 'saveExamConfig') {
+      // BƯỚC 1: Xác định file đích (Master hay Hàng xóm)
+      const targetSS = getSpreadsheetByTarget(idgv);
+      const sheet = targetSS.getSheetByName("exams") || targetSS.insertSheet("exams");
+      
+      // Tạo tiêu đề nếu sheet mới
       if (sheet.getLastRow() === 0) {
         sheet.appendRow(["exams", "IdNumber", "fulltime", "mintime", "tab", "dateclose", "MCQ", "scoremcq", "TF", "scoretf", "SA", "scoresa", "IDimglink"]);
       }
-      sheet.appendRow([
-        data.exams, data.idgv, data.fulltime, data.mintime, 
+
+      // Chuẩn bị dữ liệu hàng (Row Data)
+      const rowData = [
+        data.exams, idgv, data.fulltime, data.mintime, 
         data.tab, data.dateclose, data.MCQ, data.scoremcq, 
         data.TF, data.scoretf, data.SA, data.scoresa, data.IDimglink
-      ]);
-      return createResponse("success", "Lưu cấu hình thành công!");
+      ];
+
+      // BƯỚC 2: Kiểm tra xem mã đề đã tồn tại chưa để ghi đè (Giống logic Ma trận)
+      const vals = sheet.getDataRange().getValues();
+      let rowIndex = -1;
+      for (let i = 1; i < vals.length; i++) {
+        // Nếu trùng mã đề (cột A) và trùng ID GV (cột B)
+        if (vals[i][0].toString() === data.exams.toString() && vals[i][1].toString() === idgv.toString()) {
+          rowIndex = i + 1; 
+          break;
+        }
+      }
+
+      // BƯỚC 3: Ghi dữ liệu
+      if (rowIndex > 0) {
+        sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+      } else {
+        sheet.appendRow(rowData);
+      }
+
+      return createResponse("success", "✅ Đã lưu cấu hình đề [" + data.exams + "] vào file: " + targetSS.getName());
     }
     // 5. UPLOAD DỮ LIỆU ĐỀ THI TỪ WORD (Teacher)
     if (action === 'uploadExamData') {
@@ -474,24 +518,28 @@ function getLinkFromRouting(idNumber) {
 }
 
 function getSpreadsheetByTarget(targetId) {
+  if (!targetId) return ss;
+  
   const sheet = ss.getSheetByName("idgv");
   const rows = sheet.getDataRange().getValues();
   
   for (let i = 1; i < rows.length; i++) {
-    // Cột A: idNumber (Có thể là mã GV hoặc mã Môn như TOAN, LY)
+    // Cột A: idNumber, Cột C: linkscript (URL Spreadsheet)
     if (rows[i][0].toString().trim() === targetId.toString().trim()) {
-      let url = rows[i][2].toString().trim(); // Cột C: linkscript
-      if (!url) break;
-      
-      try {
-        return SpreadsheetApp.openByUrl(url);
-      } catch (e) {
-        throw new Error("Không thể mở Sheet của: " + targetId + ". Kiểm tra lại link hoặc quyền chia sẻ.");
+      let url = rows[i][2].toString().trim();
+      if (url && url.startsWith("http")) {
+        try {
+          // Nếu link chính là file Master thì không cần mở lại
+          if (url.indexOf(SPREADSHEET_ID) !== -1) return ss;
+          return SpreadsheetApp.openByUrl(url);
+        } catch (e) {
+          console.log("Không thể mở link riêng của GV, dùng file Master làm mặc định.");
+        }
       }
+      break;
     }
   }
-  // Nếu không tìm thấy trong sheet idgv, mặc định dùng chính file Admin này
-  return ss;
+  return ss; 
 }
 
 function replaceIdInBlock(block, newId) {
