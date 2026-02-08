@@ -133,7 +133,7 @@ const handleWordParser = (text) => {
 
     return {
       id: baseId + index,
-      classTag: classTagMatch ? classTagMatch[1] : "1001.1",
+      classTag: classTagMatch ? classTagMatch[1] : "1001.a",
       question: block
     };
   });
@@ -164,7 +164,7 @@ const handleWordParser = (text) => {
   finally { setLoading(false); }
 };
  
-// Up lG
+// Up lG===========================================================================================================================================================================
 const handleUploadLG = async () => {
   if (!jsonInput.trim()) return alert("Dán nội dung vào đã thầy ơi!");
   setLoading(true);
