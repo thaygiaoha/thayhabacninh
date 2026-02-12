@@ -24,57 +24,7 @@ const TeacherWordTask: React.FC<TeacherWordTaskProps> = ({ onBack }) => {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
-  // ====== Ghi exam tương tự ma trận ======
-  const handleSaveMatrix = async () => {
-  if (!idgv) {
-    alert("❌ Lỗi: Không xác định được ID Giáo viên!");
-    return;
-  }
-
-  // Tự động chọn Link Script dựa trên mã IDGV (8888 hoặc 9999)
-  const targetURL = API_ROUTING[idgv] || DEFAULT_API_URL;
-
-  const payload = {
-    gvId: idgv,
-    makiemtra: maTranForm.makiemtra,
-    name: maTranForm.name,
-    duration: maTranForm.duration,
-    topics: maTranForm.topics,
-    numMC: maTranForm.numMC,
-    scoreMC: maTranForm.scoreMC,
-    mcL3: maTranForm.mcL3,
-    mcL4: maTranForm.mcL4,
-    numTF: maTranForm.numTF,
-    scoreTF: maTranForm.scoreTF,
-    tfL3: maTranForm.tfL3,
-    tfL4: maTranForm.tfL4,
-    numSA: maTranForm.numSA,
-    scoreSA: maTranForm.scoreSA,
-    saL3: maTranForm.saL3,
-    saL4: maTranForm.saL4
-  };
-
-  try {
-    // ⚠️ QUAN TRỌNG: Phải có ?action=saveMatrix trên URL
-    const response = await fetch(`${targetURL}?action=saveMatrix`, {
-      method: "POST",
-      mode: "cors", // Chuyển về cors để nhận dữ liệu trả về
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json(); // Đợi Script trả về kết quả JSON
-
-    if (result.status === "success") {
-      alert(result.message); // Hiện thông báo xanh từ Script
-    } else {
-      alert("⚠️ Lỗi Script: " + result.message);
-    }
-  } catch (e) {
-    console.error(e);
-    alert("❌ Lỗi kết nối! Dữ liệu có thể đã ghi nhưng không nhận được phản hồi.");
-  }
-};
+  
  // ====== 1. Xác minh GV Word =======
 const handleVerifyW = async () => {
   if (!gvId) return alert("Vui lòng nhập ID!");
