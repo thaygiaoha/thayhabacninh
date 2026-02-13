@@ -9,7 +9,8 @@ interface LandingPageProps {
   user: AppUser | null;
   onOpenAuth: () => void;
   onOpenVip: () => void;
-  setView: (mode: 'cauhoi' | 'word') => void;
+  setView: (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
+  onOpenTeacherTask: () => void;
 }
 interface UserAcc {
   phoneNumber: string;
@@ -21,6 +22,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   user,
   onOpenAuth,
   onOpenVip,
+  onOpenTeacherTask,
   setView
 }) => {
   // --- GIỮ NGUYÊN TOÀN BỘ LOGIC DỮ LIỆU CỦA THẦY ---
@@ -48,10 +50,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
  
   const [searchId, setSearchId] = useState('');
   const [foundLG, setFoundLG] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false); 
 
-
-const [loadingLG, setLoadingLG] = useState(false); // Để hiện trạng thái đang tìm
+ const [loadingLG, setLoadingLG] = useState(false); // Để hiện trạng thái đang tìm
   const toArray = (v: any) => {
   if (Array.isArray(v)) return v;
   if (!v) return [];
