@@ -29,15 +29,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
-  // Lấy link sang web mới khi vào thi theo ma thận
-  useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const gradeParam = params.get("grade");
-
-  if (gradeParam) {
-    setSelectedGrade(gradeParam);
-  }
-}, []);
+ 
+  
   // Khởi tạo dữ liệu hệ thống
   useEffect(() => {
     const initApp = async () => {
@@ -56,6 +49,18 @@ const App: React.FC = () => {
     };
     initApp();
   }, []);
+ // Lấy link sang web mới khi vào thi theo ma thận
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const gradeParam = params.get("grade");
+
+  if (gradeParam) {
+    setSelectedGrade(gradeParam);
+
+    window.history.replaceState({}, document.title, "/");
+  }
+}, []);
+
 
   // Xử lý bắt đầu thi (Portal)
   const handleStartExam = (config: any, student: Student, selectedQuestions: Question[]) => {
