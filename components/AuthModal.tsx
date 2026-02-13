@@ -59,12 +59,12 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade, onBack, onStart }) => {
 
   // HÀM MỞ RỘNG CHUYÊN ĐỀ
   const getRelatedGrades = (currentGrade: string | number) => {
-    if (currentGrade === 12) return [10, 11, 12];
-    if (currentGrade === 11) return [10, 11];
+    if (currentGrade === 12) return [12, 11, 10];
+    if (currentGrade === 11) return [11, 10];
     if (currentGrade === 10) return [10];
-    if (currentGrade === 9) return [6, 7, 8, 9];
-    if (currentGrade === 8) return [6, 7, 8];
-    if (currentGrade === 7) return [6, 7];
+    if (currentGrade === 9) return [9, 8, 7, 6];
+    if (currentGrade === 8) return [8, 7, 6];
+    if (currentGrade === 7) return [7, 6];
     if (currentGrade === 6) return [6];
     return [currentGrade];
   };
