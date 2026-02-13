@@ -50,17 +50,16 @@ const App: React.FC = () => {
     initApp();
   }, []);
  // Lấy link sang web mới khi vào thi theo ma thận
-  useEffect(() => {
+ useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const gradeParam = params.get("grade");
 
   if (gradeParam) {
     setSelectedGrade(gradeParam);
-
-    window.history.replaceState({}, document.title, "/");
-     setCurrentView("verify"); 
+    setCurrentView("portal");   // 👈 QUAN TRỌNG
   }
 }, []);
+
 
 
   // Xử lý bắt đầu thi (Portal)
