@@ -76,7 +76,7 @@ const App: React.FC = () => {
       stk: quizStudent.stk,
       bank: quizStudent.bank,
       limit: 10, 
-      limittab: 3, 
+      limittab: 10, 
       idnumber: 'QUIZ', 
       taikhoanapp: user?.isVip ? 'VIP' : 'FREE' 
     });
