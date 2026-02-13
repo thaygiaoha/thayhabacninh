@@ -58,6 +58,7 @@ const App: React.FC = () => {
     setSelectedGrade(gradeParam);
 
     window.history.replaceState({}, document.title, "/");
+     setCurrentView("verify"); 
   }
 }, []);
 
