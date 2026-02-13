@@ -5,7 +5,7 @@ export const DANHGIA_URL = DEFAULT_API_URL;
 // Khởi tạo rỗng, chúng ta sẽ lấp đầy nó sau khi App chạy
 export let API_ROUTING: Record<string, string> = {};
 export let TOPICS_DATA: Record<string, Topic[]> = {
-  "6": [], "7": [], "8": [], "9": [], "10": [], "11": [], "12": []
+  "12": [], "11": [], "10": [], "9": [], "8": [], "7": [], "6": []
 };
 export const GRADES = [10, 11, 12];
 // Hàm này sẽ gọi lên Script Admin để lấy danh sách link
