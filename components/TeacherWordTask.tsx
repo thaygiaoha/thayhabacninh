@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
 import mammoth from 'mammoth';
 import { DANHGIA_URL, API_ROUTING } from '../config';
 
