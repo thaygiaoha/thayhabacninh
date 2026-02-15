@@ -39,82 +39,34 @@ const App: React.FC = () => {
  
   
   // Khởi tạo dữ liệu hệ thống và tạo link 
-  // Khởi tạo dữ liệu hệ thống
-useEffect(() => {
+ useEffect(() => {
   const initApp = async () => {
     try {
-      console.log("🚀 Hệ thống bắt đầu khởi tạo...");
       await Promise.all([
         fetchAdminConfig(),
         fetchApiRouting(),
         fetchQuestionsBank(),
         fetchQuestionsBankW()
       ]);
-      console.log("✅ Tất cả dữ liệu đã nạp xong!");
 
-      // --- BẮT ĐẦU XỬ LÝ LINK TRỰC TIẾP TẠI ĐÂY ---
       const params = new URLSearchParams(window.location.search);
-      const gradeParam = params.get("grade");
       const modeParam = params.get("mode");
-      const numParam = Number(params.get("num")) || 20;
-      const ptsParam = Number(params.get("pts")) || 0.5;
 
+      // Nếu link có mode=quiz, ta chỉ việc mở Modal lên thôi
       if (modeParam === "quiz") {
-        const quizQuestions: Question[] = [];
-        const usedIds = new Set<string | number>();
-
-        for (let i = 0; i < numParam; i++) {
-          const q = getRandomQuizQuestion(Array.from(usedIds) as any);
-          if (q) { // Kiểm tra nếu có câu hỏi
-            usedIds.add(q.id);
-            quizQuestions.push({
-              ...q,
-              shuffledOptions: q.o
-                ? [...q.o].sort(() => 0.5 - Math.random())
-                : undefined,
-            });
-          }
-        }
-
-        if (quizQuestions.length > 0) {
-          setActiveExam({
-            id: "QUIZ",
-            title: `Luyện tập Quiz (${quizQuestions.length} câu)`,
-            time: 15,
-            mcqPoints: ptsParam,
-            tfPoints: ptsParam,
-            saPoints: ptsParam,
-            gradingScheme: 1,
-          });
-
-          setActiveStudent({
-            sbd: "QUIZ_LINK",
-            name: "Khách",
-            class: gradeParam || "Tự do",
-            school: "Online",
-            phoneNumber: "",
-            stk: "",
-            bank: "",
-            limit: 10,
-            limittab: 2,
-            idnumber: "QUIZ",
-            taikhoanapp: "FREE",
-          });
-
-          setQuestions(quizQuestions);
-          setCurrentView("quiz");
-          return; // Thoát để không chạy xuống xử lý gradeParam bên dưới
-        }
+        setShowQuizModal(true); 
+        setCurrentView("landing"); // Chắc chắn là đang ở trang chủ để thấy Modal
       }
-
-      if (gradeParam) {
+      
+      // Giữ nguyên logic chọn khối lớp nếu cần
+      const gradeParam = params.get("grade");
+      if (gradeParam && modeParam !== "quiz") {
         setSelectedGrade(gradeParam);
         setCurrentView("portal");
       }
-      // --- KẾT THÚC XỬ LÝ LINK ---
 
     } catch (e) {
-      console.error("❌ Lỗi khởi tạo:", e);
+      console.error("❌ Lỗi:", e);
     }
   };
   initApp();
