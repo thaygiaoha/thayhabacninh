@@ -96,7 +96,7 @@ useEffect(() => {
             stk: "",
             bank: "",
             limit: 10,
-            limittab: 10,
+            limittab: 2,
             idnumber: "QUIZ",
             taikhoanapp: "FREE",
           });
