@@ -30,6 +30,8 @@ const App: React.FC = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
   const [showQuizModal, setShowQuizModal] = useState(false);
+  
+  const [quizMode, setQuizMode] = useState<'free' | 'gift' | null>(null);
 
   const [quizConfig, setQuizConfig] = useState<{
   numQuestions: number;
