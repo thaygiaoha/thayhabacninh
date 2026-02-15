@@ -65,6 +65,7 @@ useEffect(() => {
 
   if (gradeParam) {
     setSelectedGrade(gradeParam);
+    setCurrentView("portal");   
   }
 
   if (modeParam === "quiz") {
