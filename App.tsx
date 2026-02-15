@@ -146,6 +146,8 @@ const App: React.FC = () => {
                 onOpenAuth={() => setShowAuth(true)} 
                 onOpenVip={() => user ? setShowVipModal(true) : setShowAuth(true)}
                 onSelectGrade={(grade) => { setSelectedGrade(grade.toString()); setCurrentView('portal'); }} 
+                showQuizModal={showQuizModal} // Truyền biến này xuống
+                setShowQuizModal={setShowQuizModal} // Truyền cả hàm để đóng modal
                 onSelectQuiz={handleStartQuizMode}
                 setView={(mode: any) => {
                   if (mode === 'word' || mode === 'matran') {
