@@ -54,21 +54,13 @@ const App: React.FC = () => {
       const params = new URLSearchParams(window.location.search);
       const modeParam = params.get("mode");
 
-      // Nếu link có mode=quiz, ta chỉ việc mở Modal lên thôi
       if (modeParam === "quiz") {
+        // QUAN TRỌNG: Thầy phải set View về landing và bật Modal ở đây
+        setCurrentView("landing");
         setShowQuizModal(true); 
-        setCurrentView("landing"); // Chắc chắn là đang ở trang chủ để thấy Modal
       }
-      
-      // Giữ nguyên logic chọn khối lớp nếu cần
-      const gradeParam = params.get("grade");
-      if (gradeParam && modeParam !== "quiz") {
-        setSelectedGrade(gradeParam);
-        setCurrentView("portal");
-      }
-
     } catch (e) {
-      console.error("❌ Lỗi:", e);
+      console.error(e);
     }
   };
   initApp();
