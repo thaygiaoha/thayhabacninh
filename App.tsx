@@ -65,7 +65,7 @@ const App: React.FC = () => {
 
   if (gradeParam) {
     setSelectedGrade(gradeParam);
-    setCurrentView("landing"); // vẫn ở landing
+    setCurrentView("portal"); // vẫn ở landing
   }
 
   if (quizParam) {
