@@ -106,8 +106,8 @@ useEffect(() => {
       phoneNumber: "",
       stk: "",
       bank: "",
-      limit: 10,
-      limittab: 10,
+      limit: 15,
+      limittab: 2,
       idnumber: "QUIZ",
       taikhoanapp: "FREE",
     });
@@ -148,8 +148,8 @@ useEffect(() => {
       phoneNumber: quizStudent.phoneNumber,
       stk: quizStudent.stk,
       bank: quizStudent.bank,
-      limit: 10, 
-      limittab: 10, 
+      limit: 15, 
+      limittab: 2, 
       idnumber: 'QUIZ', 
       taikhoanapp: user?.isVip ? 'VIP' : 'FREE' 
     });
