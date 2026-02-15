@@ -41,29 +41,76 @@ const App: React.FC = () => {
  
   
   // Khởi tạo dữ liệu hệ thống và tạo link 
- useEffect(() => {
-  const initApp = async () => {
-    try {
-      await Promise.all([
-        fetchAdminConfig(),
-        fetchApiRouting(),
-        fetchQuestionsBank(),
-        fetchQuestionsBankW()
-      ]);
-
-      const params = new URLSearchParams(window.location.search);
-      const modeParam = params.get("mode");
-
-      if (modeParam === "quiz") {
-        // QUAN TRỌNG: Thầy phải set View về landing và bật Modal ở đây
-        setCurrentView("landing");
-        setShowQuizModal(true); 
+   // Khởi tạo dữ liệu hệ thống
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        console.log("🚀 Hệ thống bắt đầu khởi tạo...");
+        await Promise.all([
+          fetchAdminConfig(),
+          fetchApiRouting(),
+          fetchQuestionsBank(),
+          fetchQuestionsBankW()
+        ]);
+        console.log("✅ Tất cả dữ liệu đã nạp xong!");
+      } catch (e) {
+        console.error("❌ Lỗi khởi tạo:", e);
       }
-    } catch (e) {
-      console.error(e);
+    };
+    initApp();
+  }, []);
+
+  
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const gradeParam = params.get("grade");
+  const modeParam = params.get("mode");
+  const numParam = Number(params.get("num")) || 20;
+  const ptsParam = Number(params.get("pts")) || 0.5;
+  if (gradeParam) {
+    setSelectedGrade(gradeParam);
+    setCurrentView("portal");
+  if (modeParam === "quiz") {
+    // 🔥 Tạo câu hỏi giống handleStartQuizMode
+    const quizQuestions: Question[] = [];
+    const usedIds = new Set<string | number>();
+    for (let i = 0; i < numParam; i++) {
+      const q = getRandomQuizQuestion(Array.from(usedIds) as any);
+      usedIds.add(q.id);
+      quizQuestions.push({
+        ...q,
+        shuffledOptions: q.o
+          ? [...q.o].sort(() => 0.5 - Math.random())
+          : undefined,
+      });
     }
-  };
-  initApp();
+    // 🔥 Tạo exam
+    setActiveExam({
+      id: "QUIZ",
+      title: `Luyện tập Quiz (${numParam} câu)`,
+      time: 15,
+      mcqPoints: ptsParam,
+      tfPoints: ptsParam,
+      saPoints: ptsParam,
+      gradingScheme: 1,
+    });
+    // 🔥 Tạo student ảo
+    setActiveStudent({
+      sbd: "QUIZ_LINK",
+      name: "Khách",
+      class: gradeParam || "Tự do",
+      school: "Online",
+      phoneNumber: "",
+      stk: "",
+      bank: "",
+      limit: 10,
+      limittab: 10,
+      idnumber: "QUIZ",
+      taikhoanapp: "FREE",
+    });
+    setQuestions(quizQuestions);
+    setCurrentView("quiz");
+  }
 }, []);
   
   // Xử lý bắt đầu thi (Portal)
