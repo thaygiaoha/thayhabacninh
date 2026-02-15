@@ -60,22 +60,63 @@ useEffect(() => {
 
   const gradeParam = params.get("grade");
   const modeParam = params.get("mode");
-  const numParam = params.get("num");
-  const ptsParam = params.get("pts");
+  const numParam = Number(params.get("num")) || 20;
+  const ptsParam = Number(params.get("pts")) || 0.5;
 
   if (gradeParam) {
     setSelectedGrade(gradeParam);
   }
 
   if (modeParam === "quiz") {
-    setQuizConfig({
-      numQuestions: Number(numParam) || 20,
-      pointsPerQuestion: Number(ptsParam) || 0.5,
+
+    // 🔥 Tạo câu hỏi giống handleStartQuizMode
+    const quizQuestions: Question[] = [];
+    const usedIds = new Set<string | number>();
+
+    for (let i = 0; i < numParam; i++) {
+      const q = getRandomQuizQuestion(Array.from(usedIds) as any);
+      usedIds.add(q.id);
+
+      quizQuestions.push({
+        ...q,
+        shuffledOptions: q.o
+          ? [...q.o].sort(() => 0.5 - Math.random())
+          : undefined,
+      });
+    }
+
+    // 🔥 Tạo exam
+    setActiveExam({
+      id: "QUIZ",
+      title: `Luyện tập Quiz (${numParam} câu)`,
+      time: 15,
+      mcqPoints: ptsParam,
+      tfPoints: ptsParam,
+      saPoints: ptsParam,
+      gradingScheme: 1,
     });
 
-    setCurrentView("quiz"); // 👈 mở thẳng quiz
+    // 🔥 Tạo student ảo
+    setActiveStudent({
+      sbd: "QUIZ_LINK",
+      name: "Khách",
+      class: gradeParam || "Tự do",
+      school: "Online",
+      phoneNumber: "",
+      stk: "",
+      bank: "",
+      limit: 10,
+      limittab: 10,
+      idnumber: "QUIZ",
+      taikhoanapp: "FREE",
+    });
+
+    setQuestions(quizQuestions);
+
+    setCurrentView("quiz");
   }
 }, []);
+
 
 
 
