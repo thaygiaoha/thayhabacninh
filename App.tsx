@@ -29,6 +29,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
+  const [showQuizModal, setShowQuizModal] = useState(false);
+
   const [quizConfig, setQuizConfig] = useState<{
   numQuestions: number;
   pointsPerQuestion: number;
