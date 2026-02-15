@@ -50,15 +50,28 @@ const App: React.FC = () => {
     initApp();
   }, []);
  // Lấy link sang web mới khi vào thi theo ma thận
- useEffect(() => {
+useEffect(() => {
   const params = new URLSearchParams(window.location.search);
+
   const gradeParam = params.get("grade");
+  const modeParam = params.get("mode");
+  const numParam = params.get("num");
+  const ptsParam = params.get("pts");
 
   if (gradeParam) {
     setSelectedGrade(gradeParam);
-    setCurrentView("portal");   // 👈 QUAN TRỌNG
+  }
+
+  if (modeParam === "quiz") {
+    setQuizConfig({
+      numQuestions: Number(numParam) || 20,
+      pointsPerQuestion: Number(ptsParam) || 0.5,
+    });
+
+    setCurrentView("quiz"); // 👈 mở thẳng quiz
   }
 }, []);
+
 
 
 
