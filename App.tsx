@@ -55,73 +55,29 @@ const App: React.FC = () => {
     initApp();
   }, []);
  // Lấy link sang web mới khi vào thi theo ma thận
-useEffect(() => {
+  useEffect(() => {
   const params = new URLSearchParams(window.location.search);
 
   const gradeParam = params.get("grade");
-  const modeParam = params.get("mode");
-  const numParam = Number(params.get("num")) || 20;
-  const ptsParam = Number(params.get("pts")) || 0.5;
+  const quizParam = params.get("quiz");
 
   if (gradeParam) {
     setSelectedGrade(gradeParam);
-    setCurrentView("portal");   
+    setCurrentView("portal"); // vẫn ở landing
   }
 
-  if (modeParam === "quiz") {
+  if (quizParam) {
+    setShowQuizModal({ num: 20, pts: 0.5 }); // mở modal
 
-    // 🔥 Tạo câu hỏi giống handleStartQuizMode
-    const quizQuestions: Question[] = [];
-    const usedIds = new Set<string | number>();
-
-    for (let i = 0; i < numParam; i++) {
-      const q = getRandomQuizQuestion(Array.from(usedIds) as any);
-      usedIds.add(q.id);
-
-      quizQuestions.push({
-        ...q,
-        shuffledOptions: q.o
-          ? [...q.o].sort(() => 0.5 - Math.random())
-          : undefined,
-      });
+    if (quizParam === "gift") {
+      setQuizMode("gift");
+    } else if (quizParam === "free") {
+      setQuizMode("free");
     }
-
-    // 🔥 Tạo exam
-    setActiveExam({
-      id: "QUIZ",
-      title: `Luyện tập Quiz (${numParam} câu)`,
-      time: 15,
-      mcqPoints: ptsParam,
-      tfPoints: ptsParam,
-      saPoints: ptsParam,
-      gradingScheme: 1,
-    });
-
-    // 🔥 Tạo student ảo
-    setActiveStudent({
-      sbd: "QUIZ_LINK",
-      name: "Khách",
-      class: gradeParam || "Tự do",
-      school: "Online",
-      phoneNumber: "",
-      stk: "",
-      bank: "",
-      limit: 15,
-      limittab: 2,
-      idnumber: "QUIZ",
-      taikhoanapp: "FREE",
-    });
-
-    setQuestions(quizQuestions);
-
-    setCurrentView("quiz");
   }
 }, []);
 
-
-
-
-
+  
   // Xử lý bắt đầu thi (Portal)
   const handleStartExam = (config: any, student: Student, selectedQuestions: Question[]) => {
     setActiveExam(config);
