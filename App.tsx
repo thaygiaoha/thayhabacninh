@@ -38,52 +38,44 @@ const App: React.FC = () => {
   pointsPerQuestion: number;
 } | null>(null);
 
- 
-  
-  // Sửa lại useEffect xử lý Link (đặt nó sau khi các hàm fetch đã chạy xong)
+ // --- 1. XỬ LÝ LINK (CHẠY TỨC THÌ, KHÔNG ĐỢI API) ---
 useEffect(() => {
-  const initApp = async () => {
-    try {
-      console.log("🚀 Hệ thống bắt đầu khởi tạo...");
-      // Đợi nạp dữ liệu xong mới xử lý Link
-      await Promise.all([
-        fetchAdminConfig(),
-        fetchApiRouting(),
-        fetchQuestionsBank(),
-        fetchQuestionsBankW()
-      ]);
-      console.log("✅ Dữ liệu đã sẵn sàng!");
+  const params = new URLSearchParams(window.location.search);
+  const modeParam = params.get("mode");
+  const gradeParam = params.get("grade");
 
-      // Bắt đầu đọc tham số từ Link
-      const params = new URLSearchParams(window.location.search);
-      const gradeParam = params.get("grade");
-      const modeParam = params.get("mode");
+  if (modeParam === "quiz") {
+    console.log("🎯 Phát hiện link Quiz - Mở Modal ngay");
+    setCurrentView("landing");
+    setShowQuizModal(true); 
+  }
 
-      // BƯỚC 1: Xử lý khối lớp (Grade)
-      if (gradeParam) {
-        setSelectedGrade(gradeParam);
-        // Nếu chỉ có grade mà không có mode quiz, thì vào portal
-        if (modeParam !== "quiz") {
-          setCurrentView("portal");
-        } else {
-          // Nếu có cả 2, thì ở lại Landing để hiện Modal Quiz
-          setCurrentView("landing");
-        }
+  if (gradeParam && modeParam !== "quiz") {
+    setSelectedGrade(gradeParam);
+    setCurrentView("portal");
+  }
+}, []); // Chạy 1 lần duy nhất khi Mount
+  
+     // Khởi tạo dữ liệu hệ thống
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        console.log("🚀 Hệ thống bắt đầu khởi tạo...");
+        await Promise.all([
+          fetchAdminConfig(),
+          fetchApiRouting(),
+          fetchQuestionsBank(),
+          fetchQuestionsBankW()
+        ]);
+        console.log("✅ Tất cả dữ liệu đã nạp xong!");
+      } catch (e) {
+        console.error("❌ Lỗi khởi tạo:", e);
       }
+    };
+    initApp();
+  }, []);
+  
 
-      // BƯỚC 2: Xử lý bật Modal Quiz
-      if (modeParam === "quiz") {
-        setCurrentView("landing");
-        setShowQuizModal(true); // Đây là dòng kích hoạt Modal
-        
-       }
-
-    } catch (e) {
-      console.error("❌ Lỗi khởi tạo:", e);
-    }
-  };
-  initApp();
-}, []);
   
   // Xử lý bắt đầu thi (Portal)
   const handleStartExam = (config: any, student: Student, selectedQuestions: Question[]) => {
