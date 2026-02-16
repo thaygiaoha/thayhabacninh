@@ -29,7 +29,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
-  const [showQuizModal, setShowQuizModal] = useState(false);
+
+  const [showQuizModal, setShowQuizModal] = useState<{ num: number, pts: number } | null>(null);
   
   const [quizMode, setQuizMode] = useState<'free' | 'gift' | null>(null);
 
@@ -39,22 +40,23 @@ const App: React.FC = () => {
 } | null>(null);
 
  // --- 1. XỬ LÝ LINK (CHẠY TỨC THÌ, KHÔNG ĐỢI API) ---
+
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const modeParam = params.get("mode");
   const gradeParam = params.get("grade");
 
   if (modeParam === "quiz") {
-    console.log("🎯 Phát hiện link Quiz - Mở Modal ngay");
     setCurrentView("landing");
-    setShowQuizModal(true); 
+    // KHÔNG set true, mà set OBJECT chứa cấu hình quiz
+    setShowQuizModal({ num: 20, pts: 0.5 }); 
   }
 
   if (gradeParam && modeParam !== "quiz") {
     setSelectedGrade(gradeParam);
     setCurrentView("portal");
   }
-}, []); // Chạy 1 lần duy nhất khi Mount
+}, []);
   
      // Khởi tạo dữ liệu hệ thống
   useEffect(() => {
