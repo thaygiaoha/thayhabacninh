@@ -128,10 +128,7 @@ useEffect(() => {
   };
 
   const goHome = () => {
-    setCurrentView('landing');
-    setActiveExam(null);
-    setActiveStudent(null);
-    setExamResult(null);
+    window.location.href = "https://smartedu-vn.vercel.app/";
   };
 
   return (
