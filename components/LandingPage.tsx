@@ -1104,7 +1104,12 @@ const handleRedirect = () => {
                 <button onClick={() => setQuizMode('gift')} className="py-4 bg-orange-500 text-white rounded-2xl font-bold uppercase flex items-center justify-center gap-2 hover:brightness-110 shadow-lg shadow-orange-200">
                   <i className="fas fa-gift text-xl"></i> Săn Quà QuiZ
                 </button>
-                <button onClick={() => setShowQuizModal(null)} className="mt-2 text-slate-400 text-sm font-bold">Để sau</button>
+                <button 
+            onClick={() => window.location.href = "https://smartedu-vn.vercel.app/"} 
+            className="mt-2 text-slate-400 text-sm font-bold"
+              >
+            Quay lại trang chủ
+            </button>
               </div>
             ) : (
               <form onSubmit={handleStartQuiz} className="space-y-4 animate-fade-in">
