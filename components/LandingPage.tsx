@@ -11,12 +11,16 @@ interface LandingPageProps {
   onOpenVip: () => void;
   setView: (mode: 'matran' | 'cauhoi' | 'word' | 'admin') => void;
   onOpenTeacherTask: () => void;
+  showQuizModal: { num: number, pts: number } | null; // Nhận từ App
+  setShowQuizModal: (val: { num: number, pts: number } | null) => void;
 }
 interface UserAcc {
   phoneNumber: string;
   vip: string;
 }
 const LandingPage: React.FC<LandingPageProps> = ({
+  showQuizModal, 
+  setShowQuizModal,
   onSelectGrade,
   onSelectQuiz,
   user,
@@ -32,7 +36,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [quizMode, setQuizMode] = useState<'free' | 'gift' | null>(null);
   const [inputPassword, setInputPassword] = useState('');
   const [currentImg, setCurrentImg] = useState(0);
-  const [showQuizModal, setShowQuizModal] = useState<{ num: number, pts: number } | null>(null);
+  
   const [quizInfo, setQuizInfo] = useState({ name: '', class: '', school: '', phone: '' });
   const [bankInfo, setBankInfo] = useState({ stk: '', bankName: '' });
   const [serverPassword, setServerPassword] = useState("");
