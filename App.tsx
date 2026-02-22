@@ -49,7 +49,7 @@ useEffect(() => {
   if (modeParam === "quiz") {
     setCurrentView("landing");
     // KHÔNG set true, mà set OBJECT chứa cấu hình quiz
-    setShowQuizModal({ num: 20, pts: 0.5 }); 
+    setShowQuizModal({ num: 10, pts: 0.5 }); 
   }
 
   if (gradeParam && modeParam !== "quiz") {
@@ -96,7 +96,7 @@ useEffect(() => {
       usedIds.add(q.id);
       quizQuestions.push({...q, shuffledOptions: q.o ? [...q.o].sort(() => 0.5 - Math.random()) : undefined});
     }
-    setActiveExam({ id: 'QUIZ', title: `Luyện tập Quiz (${num} câu)`, time: 15, mcqPoints: pts, tfPoints: pts, saPoints: pts, gradingScheme: 1 });
+    setActiveExam({ id: 'QUIZ', title: `Luyện tập Quiz (${num} câu)`, time: 10, mcqPoints: pts, tfPoints: pts, saPoints: pts, gradingScheme: 1 });
     setActiveStudent({ 
       sbd: quizStudent.phoneNumber || 'QUIZ_GUEST', 
       name: quizStudent.name || 'Khách', 
@@ -105,7 +105,7 @@ useEffect(() => {
       phoneNumber: quizStudent.phoneNumber,
       stk: quizStudent.stk,
       bank: quizStudent.bank,
-      limit: 15, 
+      limit: 10, 
       limittab: 2, 
       idnumber: 'QUIZ', 
       taikhoanapp: user?.isVip ? 'VIP' : 'FREE' 
