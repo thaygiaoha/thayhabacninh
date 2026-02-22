@@ -49,7 +49,7 @@ useEffect(() => {
   if (modeParam === "quiz") {
     setCurrentView("landing");
     // KHÔNG set true, mà set OBJECT chứa cấu hình quiz
-    setShowQuizModal({ num: 10, pts: 0.5 }); 
+    setShowQuizModal({ num: 10, pts: 1.0 }); 
   }
 
   if (gradeParam && modeParam !== "quiz") {
@@ -94,7 +94,7 @@ useEffect(() => {
     for(let i=0; i<num; i++) {
       const q = getRandomQuizQuestion(Array.from(usedIds) as any);
       usedIds.add(q.id);
-      quizQuestions.push({...q, shuffledOptions: q.o ? [...q.o].sort(() => 0.5 - Math.random()) : undefined});
+      quizQuestions.push({...q, shuffledOptions: q.o ? [...q.o].sort(() => 1.0 - Math.random()) : undefined});
     }
     setActiveExam({ id: 'QUIZ', title: `Luyện tập Quiz (${num} câu)`, time: 10, mcqPoints: pts, tfPoints: pts, saPoints: pts, gradingScheme: 1 });
     setActiveStudent({ 
