@@ -114,67 +114,95 @@ const normalizeText = (text) => {
     setLoading(false);
   }
 };  
-const handleWordParser = (text) => {
-  if (!text.trim()) {
+// ===========================================================================================================================================tách dữ liệu câu hỏi
+  const handleWordParser = (text) => {
+  if (!text || !text.trim()) {
     setJsonInput('');
     return;
   }
 
-  // Tách từng block { ... }
   const blocks = [];
-  let current = '';
-  let depth = 0;
+  const rawParts = text.split('}#');
 
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === '{') {
-      if (depth === 0) current = '';
-      depth++;
+  rawParts.forEach(part => {
+    const start = part.indexOf('{');
+    if (start !== -1) {
+      const block = part.slice(start).trim() + '}';
+      blocks.push(block);
     }
-    if (depth > 0) current += ch;
-    if (ch === '}') {
-      depth--;
-      if (depth === 0) blocks.push(current.trim());
-    }
+  });
+
+  if (!blocks.length) {
+    alert("❌ Không tìm thấy block!");
+    return;
   }
 
-  const baseId = Date.now(); // mốc an toàn
-  const results = blocks.map((block, index) => {
-    const classTagMatch = block.match(/classTag\s*:\s*["']([^"']+)["']/);
+  const results = blocks.map((block) => {
+    try {
+      const obj = new Function(`return (${block})`)();
 
-    return {
-      id: baseId + index,
-      classTag: classTagMatch ? classTagMatch[1] : "1001.1",
-      question: block
-    };
-  });
+      return {
+        id: obj.id,
+        classTag: obj.classTag || "",
+        type: obj.type || "",
+        part: obj.part || "",
+        question: obj.question || "",
+        options: obj.o ? JSON.stringify(obj.o) :
+                 obj.s ? JSON.stringify(obj.s) : "",
+        answer: obj.a || "",
+        loigiai: obj.loigiai || ""
+      };
+
+    } catch (e) {
+      console.error("Parse lỗi:", block);
+      return null;
+    }
+  }).filter(Boolean);
 
   setJsonInput(JSON.stringify(results, null, 2));
 };
+// ===================================load ngân hàng đề =====================
+  const handleLoadQuestions = async () => {
+  const resp = await fetch(`${DANHGIA_URL}?action=loadQuestions`);
+  const res = await resp.json();
 
+  if (res.status === 'success') {
+    setAllQuestions(res.data);
+    alert("📚 Đã load ngân hàng câu hỏi!");
+  } else {
+    alert("Lỗi load!");
+  }
+};
 
-  const handleSaveQuestions = async () => {
+// ======================================================================================Ghi câu hoi ngân hàng=========
+  
+ const handleSaveQuestions = async () => {
   if (!jsonInput) return alert("Chưa có dữ liệu!");
   setLoading(true);
   try {
-    const dataArray = JSON.parse(jsonInput); // Đây là mảng các câu hỏi [{id, tag, q}, ...]
+    // Phải parse jsonInput thành mảng Object trước khi gửi
+    const dataArray = JSON.parse(jsonInput); 
     
-    // Gửi yêu cầu POST với nội dung là mảng phẳng
     const resp = await fetch(`${DANHGIA_URL}?action=saveQuestions`, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, 
-      body: JSON.stringify(dataArray) // Gửi THẲNG cái mảng này đi
+      body: JSON.stringify(dataArray) 
     });
     
     const res = await resp.json();
     if (res.status === 'success') { 
-      alert(`🚀 Thành công! Đã chèn ${dataArray.length} câu hỏi vào ngân hàng.`); 
+      alert(`🚀 Thành công! Đã chèn thêm ${dataArray.length} câu hỏi vào ngân hàng .`); 
       setJsonInput(''); 
+    } else {
+      alert("Lỗi: " + res.message);
     }
-  } catch (e) { alert("Lỗi gửi dữ liệu!"); }
-  finally { setLoading(false); }
+  } catch (e) { 
+    console.error(e);
+    alert("Lỗi gửi dữ liệu! Thầy kiểm tra dữ liệu đầu vào có chuẩn mảng JSON không nhé."); 
+  } finally { 
+    setLoading(false); 
+  }
 };
- 
 // Up lG
 const handleUploadLG = async () => {
   if (!jsonInput.trim()) return alert("Dán nội dung vào đã thầy ơi!");
