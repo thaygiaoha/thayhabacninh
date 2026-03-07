@@ -142,15 +142,15 @@ useEffect(() => {
   }, [config.id, config.time, handleSubmit]);
 
   const isAnswered = (idx: number) => {
-  const ans = answers[idx].answer;
+  const ans = answers[idx]?.answer;
 
   if (questions[idx].type === "true-false") {
-    return Array.isArray(ans) && ans.every(v => v !== null && v !== undefined);
+    if (!Array.isArray(ans)) return false;
+    return ans.filter(v => v === true || v === false).length === 4;
   }
 
   return ans !== null && ans !== "";
 };
-
   const getQuestionStyle = (idx: number) => {
     const answered = isAnswered(idx);
     if (answered) return "bg-blue-800 text-white border-blue-900 shadow-md";
