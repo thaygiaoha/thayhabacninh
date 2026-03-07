@@ -178,9 +178,14 @@ useEffect(() => {
     if (answered) return "bg-blue-800 text-white border-blue-900 shadow-md";
     const q = questions[idx];
     const p = q.part.toUpperCase();
-    if (p.includes("PHẦN I")) return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
-    if (p.includes("PHẦN II")) return "bg-orange-500 text-orange-700 border-orange-200 hover:bg-orange-200";
-   if (p.includes("PHẦN III")) return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
+    if (p.includes("PHẦN I"))
+  return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
+
+if (p.includes("PHẦN II"))
+  return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200";
+
+if (p.includes("PHẦN III"))
+  return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
     return "bg-slate-100 text-slate-500 border-slate-200";
   };
 
@@ -196,7 +201,7 @@ useEffect(() => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8 font-sans">
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100">
+        <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 sticky top-24">
            <div className="space-y-3 mb-6">
               <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Tài khoản hiện tại</p>
