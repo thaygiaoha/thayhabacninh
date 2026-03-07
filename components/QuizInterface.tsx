@@ -202,7 +202,7 @@ useEffect(() => {
   </div>
 
   <button
-    onClick={() => confirm("Nộp bài?") && handleSubmit()}
+    onClick={() => confirm("Chắc chắn nộp bài?") && handleSubmit()}
     className="px-4 py-2 bg-red-600 text-white rounded-xl font-bold shadow"
   >
     Nộp bài
