@@ -76,13 +76,14 @@ export default function useExamSecurity({
       }
     };
 
-    const start = () => {
-      requestFull();
-      document.removeEventListener("click", start);
-    };
+   const start = () => {
+  requestFull();
+  document.removeEventListener("click", start);
+  document.removeEventListener("keydown", start);
+};
 
-    document.addEventListener("click", start);
-
+document.addEventListener("click", start);
+document.addEventListener("keydown", start);
     const exitHandler = () => {
       if (!document.fullscreenElement) {
         handleViolation(
