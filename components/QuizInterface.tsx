@@ -23,7 +23,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   forceFullscreen: true,
   blockCopy: true,
   blockDevTools: true,
-  studentId: studentInfo?.sbd,
+  studentId: studentInfo?.sbd || "anonymous",
   maxViolations: 4,
   onAutoSubmit: () => {
     alert("Phát hiện vi phạm nhiều lần. Hệ thống sẽ tự nộp bài!");
