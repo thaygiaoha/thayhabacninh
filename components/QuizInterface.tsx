@@ -117,14 +117,17 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
     return "bg-slate-100 text-slate-500 border-slate-200";
   };
 
-  const currentQuestion = questions[currentIndex];
+ const currentQuestion = useMemo(
+  () => questions[currentIndex],
+  [questions, currentIndex]
+);
   const pStr = currentQuestion.part.toUpperCase();
   const colorSet = pStr.includes("PHẦN I") ? { bg: "bg-blue-600", text: "text-blue-600" } : 
                    pStr.includes("PHẦN II") ? { bg: "bg-pink-600", text: "text-pink-600" } :
                    { bg: "bg-orange-600", text: "text-orange-600" };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 font-sans">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8 font-sans">
       <div className="lg:col-span-1 space-y-6">
         <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100">
            <div className="space-y-3 mb-6">
@@ -138,7 +141,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
               </div>
            </div>
 
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
             {questions.map((_, i) => (
               <button key={i} onClick={() => setCurrentIndex(i)} className={`aspect-square rounded-xl font-black text-xs transition-all border-2 flex items-center justify-center ${getQuestionStyle(i)} ${currentIndex === i ? 'ring-4 ring-yellow-400 scale-110 z-10' : ''}`}>
                 {i + 1}
@@ -147,13 +150,18 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-[2rem] shadow-xl text-center border border-slate-100">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Thời gian còn lại</p>
-          <p className={`text-4xl font-black ${timeLeft < 300 && config.time < 900 ? 'text-red-600 animate-pulse' : 'text-slate-800'}`}>
-            {formatTime(timeLeft)}
-          </p>
-          <button onClick={() => confirm("Bạn có chắc chắn muốn nộp bài?") && handleSubmit()} className="w-full mt-6 py-4 bg-red-600 text-white rounded-2xl font-black shadow-lg hover:bg-red-700 transition active:scale-95 border-b-4 border-red-800 uppercase text-sm">Nộp Bài Thi</button>
-        </div>
+        <div className="lg:hidden sticky top-0 z-50 bg-white p-3 mb-3 flex justify-between items-center border-b">
+  <span className="font-black text-red-600">
+    {formatTime(timeLeft)}
+  </span>
+
+  <button
+    onClick={() => confirm("Nộp bài?") && handleSubmit()}
+    className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold"
+  >
+    Nộp
+  </button>
+</div>
       </div>
 
      <div className="lg:col-span-3">
@@ -194,7 +202,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
               
               {/* Câu hỏi trả lời ngắn */}
               {currentQuestion.type === 'short-answer' && (
-                <input type="text" className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black bg-slate-50 text-blue-900 outline-none" placeholder="Nhập đáp án của bạn...(dùng dấu chấm (.) thay dấu phẩy(,) nhé). Ví dụ: 6.04" value={answers[currentIndex].answer as string || ''} onChange={e => { const n = [...answers]; n[currentIndex].answer = e.target.value; setAnswers(n); }} />
+                <input 
+                  type="text"
+                  inputMode="decimal"
+                  className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black text-base bg-slate-50 text-blue-900 outline-none" placeholder="Ví dụ: 6.32(dùng dấu (.)) value={answers[currentIndex].answer as string || ''} onChange={e => { const n = [...answers]; n[currentIndex].answer = e.target.value; setAnswers(n); }} />
               )}
               
               {/* Câu hỏi Đúng/Sai */}
