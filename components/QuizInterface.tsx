@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ExamConfig, Question, UserAnswer, ExamResult, Student } from '../types';
+import useExamSecurity from "../hooks/useExamSecurity";
 import MathText from './MathText';
 
 interface QuizInterfaceProps {
@@ -11,7 +12,18 @@ interface QuizInterfaceProps {
   isQuizMode?: boolean;
 }
 
-const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, questions, onFinish, isQuizMode = false }) => {
+const QuizInterface: React.FC<QuizInterfaceProps> = ({ 
+    config, 
+    student, 
+    questions, 
+    onFinish, 
+    isQuizMode = false 
+   }) => {
+    useExamSecurity({
+  forceFullscreen: true,
+  blockCopy: true,
+  blockDevTools: true
+});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>(
     questions.map(q => ({ 
@@ -41,7 +53,7 @@ useEffect(() => {
       timeLeft
     })
   );
-}, [answers, currentIndex, timeLeft, config.id, student.sbd]);
+}, [answers, currentIndex, config.id, student.sbd]);
   useEffect(() => {
   const key = "exam_" + config.id + "_" + student.sbd;
 
@@ -52,7 +64,7 @@ useEffect(() => {
 
     if (data.answers) setAnswers(data.answers);
     if (data.currentIndex !== undefined) setCurrentIndex(data.currentIndex);
-    if (data.timeLeft) setTimeLeft(data.timeLeft);
+    if (data.timeLeft !== undefined) setTimeLeft(data.timeLeft);
   }
 }, []);
   const handleSubmit = useCallback(() => {
@@ -61,11 +73,14 @@ useEffect(() => {
 
     let score = 0;
     questions.forEach((q, idx) => {
-      const u = answers[idx].answer;
+      const u = answers[idx]?.answer;
       if (q.type === 'mcq' && u === q.a) score += config.mcqPoints;
       else if (q.type === 'short-answer' && u?.toString().trim().toLowerCase() === q.a?.toString().trim().toLowerCase()) score += config.saPoints;
       else if (q.type === 'true-false') {
-        const correctCount = q.s!.reduce((acc, s, si) => acc + ((u as any)[si] === s.a ? 1 : 0), 0);
+        const correctCount = q.s!.reduce(
+  (acc, s, si) => acc + (((u as any) ?? [])[si] === s.a ? 1 : 0),
+  0
+);
         score += config.tfPoints * ([0, 0.1, 0.25, 0.5, 1][correctCount] || 0);
       }
     });
@@ -243,7 +258,7 @@ useEffect(() => {
                   inputMode="decimal"
                   autoComplete="off"
                   className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black text-base bg-slate-50 text-blue-900 outline-none" placeholder="Ví dụ: 6.32(dùng dấu (.))" 
-                  value={answers[currentIndex].answer as string || ''} 
+                  value={(answers[currentIndex]?.answer as string) || ''} 
                   onChange={e => {
                   const value = e.target.value.replace(",", ".");
                   setAnswers(prev => {
