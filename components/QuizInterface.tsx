@@ -248,7 +248,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
     return copy;
   });
 }} 
-                        className={`px-6 py-2 rounded-xl font-black border-2 transition-all shadow-sm text-xs ${ (answers[currentIndex].answer as any)[si] === v ? (v ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-600 text-white border-red-600') : 'bg-white text-slate-300 border-slate-200 hover:border-blue-100'}`}>
+                        className={`px-6 py-3 min-w-[70px] rounded-xl font-black border-2 transition-all shadow-sm text-xs ${ (answers[currentIndex].answer as any)[si] === v ? (v ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-600 text-white border-red-600') : 'bg-white text-slate-300 border-slate-200 hover:border-blue-100'}`}>
                         {v?'ĐÚNG':'SAI'}
                       </button>
                     ))}
