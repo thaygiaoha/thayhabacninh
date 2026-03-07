@@ -7,7 +7,7 @@ export let API_ROUTING: Record<string, string> = {};
 export let TOPICS_DATA: Record<string, Topic[]> = {
   "12": [], "11": [], "10": [], "9": [], "8": [], "7": [], "6": []
 };
-export const GRADES = [10, 11, 12];
+export const GRADES = [12, 11, 10];
 // Hàm này sẽ gọi lên Script Admin để lấy danh sách link
 export const fetchApiRouting = async () => {
   try {
@@ -38,7 +38,7 @@ export const fetchAdminConfig = async () => {
     if (result.status === "success" && result.data) {
       const { topics } = result.data;
       const newTopics: Record<string, Topic[]> = { 
-        "6": [], "7": [], "8": [], "9": [], "10": [], "11": [], "12": [] 
+        "12": [], "11": [], "10": [], "9": [], "8": [], "7": [], "6": [] 
       };
       
       topics.forEach((t: any) => {
