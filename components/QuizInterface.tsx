@@ -19,18 +19,19 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     onFinish, 
     isQuizMode = false 
    }) => {
-    useExamSecurity({
+   useExamSecurity({
   forceFullscreen: true,
   blockCopy: true,
   blockDevTools: true,
 
-  studentId: student.sbd,
+  disableTabSwitchDetection: true, // thêm dòng này
 
+  studentId: studentInfo.sbd,
   maxViolations: 3,
 
   onAutoSubmit: () => {
-    alert("Hệ thống phát hiện gian lận nhiều lần. Bài thi sẽ được nộp tự động!");
-    handleSubmit();
+    alert("Phát hiện vi phạm nhiều lần. Hệ thống sẽ tự nộp bài!");
+    handleFinish(true);
   }
 });
   const [currentIndex, setCurrentIndex] = useState(0);
