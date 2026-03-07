@@ -31,6 +31,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   // --- GIỮ NGUYÊN TOÀN BỘ LOGIC DỮ LIỆU CỦA THẦY ---
   const REDIRECT_LINKS: Record<string, string> = { "default": "https://www.facebook.com/hoctoanthayha.bg" };
+  
   const [showAppList, setShowAppList] = useState(false);
   const [isOtherBank, setIsOtherBank] = useState(false);
   const [quizMode, setQuizMode] = useState<'free' | 'gift' | null>(null);
@@ -145,7 +146,7 @@ const handleSaveMatrix = async () => {
   }
 
   // Tự động chọn Link Script dựa trên mã IDGV (8888 hoặc 9999)
-  const targetURL = API_ROUTING[idgv] || DEFAULT_API_URL;
+  const targetURL = API_ROUTING[idgv] || DANHGIA_URL;
 
   const payload = {
     gvId: idgv,
