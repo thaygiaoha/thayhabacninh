@@ -179,7 +179,7 @@ useEffect(() => {
     const q = questions[idx];
     const p = q.part.toUpperCase();
     if (p.includes("PHẦN I")) return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
-    if (p.includes("PHẦN II")) return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200";
+    if (p.includes("PHẦN II")) return "bg-orange-500 text-orange-700 border-orange-200 hover:bg-orange-200";
    if (p.includes("PHẦN III")) return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
     return "bg-slate-100 text-slate-500 border-slate-200";
   };
