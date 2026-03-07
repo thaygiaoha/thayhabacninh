@@ -151,8 +151,8 @@ useEffect(() => {
     const q = questions[idx];
     const p = q.part.toUpperCase();
     if (p.includes("PHẦN I")) return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
-    if (p.includes("PHẦN II")) return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
-    if (p.includes("PHẦN III")) return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200";
+    if (p.includes("PHẦN II")) return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200";
+   if (p.includes("PHẦN III")) return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
     return "bg-slate-100 text-slate-500 border-slate-200";
   };
 
@@ -189,17 +189,19 @@ useEffect(() => {
           </div>
         </div>
         
-        <div className="lg:hidden sticky top-0 z-50 bg-white p-3 mb-3 flex justify-between items-center border-b">
-  <span className="font-black text-red-600">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+
+  <div className="bg-white px-4 py-2 rounded-xl shadow font-black text-red-600">
     {formatTime(timeLeft)}
-  </span>
+  </div>
 
   <button
     onClick={() => confirm("Nộp bài?") && handleSubmit()}
-    className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold"
+    className="px-4 py-2 bg-red-600 text-white rounded-xl font-bold shadow"
   >
-    Nộp
+    Nộp bài
   </button>
+
 </div>
       </div>
 
