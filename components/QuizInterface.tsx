@@ -19,16 +19,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     onFinish, 
     isQuizMode = false 
    }) => {
-   useExamSecurity({
+  useExamSecurity({
   forceFullscreen: true,
   blockCopy: true,
   blockDevTools: true,
-
-  disableTabSwitchDetection: true, // thêm dòng này
-
   studentId: studentInfo.sbd,
-  maxViolations: 3,
-
+  maxViolations: 4,
   onAutoSubmit: () => {
     alert("Phát hiện vi phạm nhiều lần. Hệ thống sẽ tự nộp bài!");
     handleFinish(true);
