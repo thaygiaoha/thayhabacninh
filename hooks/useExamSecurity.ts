@@ -1,56 +1,104 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface SecurityOptions {
   forceFullscreen?: boolean;
   blockCopy?: boolean;
   blockDevTools?: boolean;
+  maxViolations?: number;
+  onAutoSubmit?: () => void;   // callback nộp bài
+  studentId?: string;
 }
 
 export default function useExamSecurity({
   forceFullscreen = true,
   blockCopy = true,
-  blockDevTools = true
+  blockDevTools = true,
+  maxViolations = 3,
+  onAutoSubmit,
+  studentId
 }: SecurityOptions = {}) {
+
+  const violations = useRef(0);
+
+  const logViolation = async (type: string) => {
+    try {
+      await fetch("/api/exam/violation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          studentId,
+          type,
+          time: new Date().toISOString()
+        })
+      });
+    } catch {}
+  };
+
+  const handleViolation = (msg: string, type: string) => {
+
+    violations.current++;
+
+    logViolation(type);
+
+    alert(`${msg}\nVi phạm ${violations.current}/${maxViolations}`);
+
+    if (violations.current >= maxViolations) {
+
+      alert("Bạn đã vi phạm quá số lần cho phép. Hệ thống sẽ tự nộp bài.");
+
+      if (onAutoSubmit) onAutoSubmit();
+    }
+
+  };
+
+  /* =========================
+     FULLSCREEN
+  ========================= */
 
   useEffect(() => {
 
-    /* =========================
-       1. BẮT FULLSCREEN
-    ========================= */
+    if (!forceFullscreen) return;
 
     const requestFull = () => {
-      const el = document.documentElement;
-
       if (!document.fullscreenElement) {
-        el.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(()=>{});
       }
     };
 
-    if (forceFullscreen) {
+    const start = () => {
       requestFull();
+      document.removeEventListener("click", start);
+    };
 
-      const exitHandler = () => {
-        if (!document.fullscreenElement) {
-          alert("Không được thoát chế độ toàn màn hình khi đang làm bài!");
-          requestFull();
-        }
-      };
+    document.addEventListener("click", start);
 
-      document.addEventListener("fullscreenchange", exitHandler);
+    const exitHandler = () => {
+      if (!document.fullscreenElement) {
+        handleViolation(
+          "Không được thoát toàn màn hình khi đang làm bài!",
+          "exit_fullscreen"
+        );
+        requestFull();
+      }
+    };
 
-      return () => {
-        document.removeEventListener("fullscreenchange", exitHandler);
-      };
-    }
+    document.addEventListener("fullscreenchange", exitHandler);
+
+    return () => {
+      document.removeEventListener("click", start);
+      document.removeEventListener("fullscreenchange", exitHandler);
+    };
 
   }, []);
 
 
-  useEffect(() => {
+  /* =========================
+     CHỐNG COPY
+  ========================= */
 
-    /* =========================
-       2. CHỐNG COPY
-    ========================= */
+  useEffect(() => {
 
     if (!blockCopy) return;
 
@@ -60,6 +108,8 @@ export default function useExamSecurity({
     document.addEventListener("cut", prevent);
     document.addEventListener("contextmenu", prevent);
     document.addEventListener("selectstart", prevent);
+
+    document.body.style.userSelect = "none";
 
     return () => {
       document.removeEventListener("copy", prevent);
@@ -71,11 +121,11 @@ export default function useExamSecurity({
   }, []);
 
 
-  useEffect(() => {
+  /* =========================
+     CHỐNG DEVTOOLS
+  ========================= */
 
-    /* =========================
-       3. CHỐNG F12 / DEVTOOLS
-    ========================= */
+  useEffect(() => {
 
     if (!blockDevTools) return;
 
@@ -87,7 +137,7 @@ export default function useExamSecurity({
         (e.ctrlKey && e.key === "U")
       ) {
         e.preventDefault();
-        alert("Chức năng này bị khóa trong chế độ thi!");
+        handleViolation("Chức năng này bị khóa!", "devtools_key");
       }
 
     };
@@ -96,6 +146,114 @@ export default function useExamSecurity({
 
     return () => {
       document.removeEventListener("keydown", keyHandler);
+    };
+
+  }, []);
+
+
+  /* =========================
+     PHÁT HIỆN DEVTOOLS
+  ========================= */
+
+  useEffect(() => {
+
+    if (!blockDevTools) return;
+
+    const detect = () => {
+
+      const threshold = 160;
+
+      if (
+        window.outerWidth - window.innerWidth > threshold ||
+        window.outerHeight - window.innerHeight > threshold
+      ) {
+        handleViolation("Phát hiện DevTools!", "devtools_open");
+      }
+
+    };
+
+    const interval = setInterval(detect, 2000);
+
+    return () => clearInterval(interval);
+
+  }, []);
+
+
+  /* =========================
+     CHUYỂN TAB
+  ========================= */
+
+  useEffect(() => {
+
+    const visibilityHandler = () => {
+
+      if (document.hidden) {
+        handleViolation(
+          "Không được chuyển tab khi đang làm bài!",
+          "tab_switch"
+        );
+      }
+
+    };
+
+    document.addEventListener("visibilitychange", visibilityHandler);
+
+    return () => {
+      document.removeEventListener("visibilitychange", visibilityHandler);
+    };
+
+  }, []);
+
+
+  /* =========================
+     CHỐNG NHIỀU TAB
+  ========================= */
+
+  useEffect(() => {
+
+    const key = "exam_tab_lock";
+
+    if (localStorage.getItem(key)) {
+
+      alert("Bài thi đã được mở ở tab khác!");
+      window.close();
+
+    }
+
+    localStorage.setItem(key, "active");
+
+    return () => {
+      localStorage.removeItem(key);
+    };
+
+  }, []);
+
+
+  /* =========================
+     CHỐNG CHỤP MÀN HÌNH (một phần)
+  ========================= */
+
+  useEffect(() => {
+
+    const detectPrintScreen = (e: KeyboardEvent) => {
+
+      if (e.key === "PrintScreen") {
+
+        navigator.clipboard.writeText("Screenshot blocked");
+
+        handleViolation(
+          "Không được chụp màn hình bài thi!",
+          "screenshot"
+        );
+
+      }
+
+    };
+
+    document.addEventListener("keyup", detectPrintScreen);
+
+    return () => {
+      document.removeEventListener("keyup", detectPrintScreen);
     };
 
   }, []);
