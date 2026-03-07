@@ -179,57 +179,7 @@ export default function useExamSecurity({
   }, []);
 
 
-  /* =========================
-     CHUYỂN TAB
-  ========================= */
-
-  useEffect(() => {
-
-    const visibilityHandler = () => {
-
-      if (document.hidden) {
-        handleViolation(
-          "Không được chuyển tab khi đang làm bài!",
-          "tab_switch"
-        );
-      }
-
-    };
-
-    document.addEventListener("visibilitychange", visibilityHandler);
-
-    return () => {
-      document.removeEventListener("visibilitychange", visibilityHandler);
-    };
-
-  }, []);
-
-
-  /* =========================
-     CHỐNG NHIỀU TAB
-  ========================= */
-
-  useEffect(() => {
-
-    const key = "exam_tab_lock";
-
-    if (localStorage.getItem(key)) {
-
-      alert("Bài thi đã được mở ở tab khác!");
-      window.close();
-
-    }
-
-    localStorage.setItem(key, "active");
-
-    return () => {
-      localStorage.removeItem(key);
-    };
-
-  }, []);
-
-
-  /* =========================
+    /* =========================
      CHỐNG CHỤP MÀN HÌNH (một phần)
   ========================= */
 
