@@ -26,11 +26,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
 });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>(
-    questions.map(q => ({ 
-      questionId: q.id, 
-      answer: q.type === 'true-false' ? [undefined, undefined, undefined, undefined] : null 
-    }))
-  );
+  questions.map(q => ({ 
+    questionId: q.id, 
+    answer: q.type === 'true-false'
+      ? [null, null, null, null]
+      : null 
+  }))
+);
   const TOTAL_TIME = config.time * 60; // giây
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   
@@ -143,7 +145,7 @@ useEffect(() => {
   const ans = answers[idx].answer;
 
   if (questions[idx].type === "true-false") {
-    return (ans as any[]).every(v => v !== undefined);
+    return Array.isArray(ans) && ans.every(v => v !== null && v !== undefined);
   }
 
   return ans !== null && ans !== "";
