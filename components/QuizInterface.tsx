@@ -32,20 +32,7 @@ useExamSecurity({
     alert("Phát hiện vi phạm nhiều lần. Hệ thống sẽ tự nộp bài!");
     handleFinish(true);
   }
-});
-  useExamSecurity({
-  forceFullscreen: true,
-  blockCopy: true,
-  blockDevTools: true,
-  studentId: typeof studentInfo !== "undefined"
-  ? studentInfo?.sbd
-  : "anonymous",
-  maxViolations: 4,
-  onAutoSubmit: () => {
-    alert("Phát hiện vi phạm nhiều lần. Hệ thống sẽ tự nộp bài!");
-    handleFinish(true);
-  }
-});
+});  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>(
   questions.map(q => ({ 
