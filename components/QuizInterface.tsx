@@ -205,7 +205,21 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
                 <input 
                   type="text"
                   inputMode="decimal"
-                  className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black text-base bg-slate-50 text-blue-900 outline-none" placeholder="Ví dụ: 6.32(dùng dấu (.)) value={answers[currentIndex].answer as string || ''} onChange={e => { const n = [...answers]; n[currentIndex].answer = e.target.value; setAnswers(n); }} />
+                  autoComplete="off"
+                  className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black text-base bg-slate-50 text-blue-900 outline-none" placeholder="Ví dụ: 6.32(dùng dấu (.)) 
+                  value={answers[currentIndex].answer as string || ''} 
+                  onChange={e => {
+                  const value = e.target.value.replace(",", ".");
+                  setAnswers(prev => {
+                  const copy = [...prev];
+                  copy[currentIndex] = {
+                    ...copy[currentIndex],
+                    answer: value
+                    };
+                return copy;
+              });
+                }} 
+                  />
               )}
               
               {/* Câu hỏi Đúng/Sai */}
@@ -217,7 +231,24 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
                   </div>
                   <div className="flex gap-2 shrink-0">
                     {[true, false].map(v => (
-                      <button key={v?1:0} onClick={() => { const n = [...answers]; (n[currentIndex].answer as any)[si] = v; setAnswers(n); }} className={`px-6 py-2 rounded-xl font-black border-2 transition-all shadow-sm text-xs ${ (answers[currentIndex].answer as any)[si] === v ? (v ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-600 text-white border-red-600') : 'bg-white text-slate-300 border-slate-200 hover:border-blue-100'}`}>
+                      <button key={v?1:0} 
+                        onClick={() => {
+                        setAnswers(prev => {
+                        const copy = [...prev];
+
+                        const current = [...(copy[currentIndex].answer as boolean[])];
+
+                          current[si] = v;
+
+    copy[currentIndex] = {
+      ...copy[currentIndex],
+      answer: current
+    };
+
+    return copy;
+  });
+}} 
+                        className={`px-6 py-2 rounded-xl font-black border-2 transition-all shadow-sm text-xs ${ (answers[currentIndex].answer as any)[si] === v ? (v ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-600 text-white border-red-600') : 'bg-white text-slate-300 border-slate-200 hover:border-blue-100'}`}>
                         {v?'ĐÚNG':'SAI'}
                       </button>
                     ))}
