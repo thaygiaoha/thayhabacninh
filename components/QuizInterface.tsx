@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ExamConfig, Question, UserAnswer, ExamResult, Student } from '../types';
 import MathText from './MathText';
 
@@ -30,7 +30,31 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
     const s = seconds % 60;
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+useEffect(() => {
+  const key = "exam_" + config.id + "_" + student.sbd;
 
+  localStorage.setItem(
+    key,
+    JSON.stringify({
+      answers,
+      currentIndex,
+      timeLeft
+    })
+  );
+}, [answers, currentIndex, timeLeft, config.id, student.sbd]);
+  useEffect(() => {
+  const key = "exam_" + config.id + "_" + student.sbd;
+
+  const saved = localStorage.getItem(key);
+
+  if (saved) {
+    const data = JSON.parse(saved);
+
+    if (data.answers) setAnswers(data.answers);
+    if (data.currentIndex !== undefined) setCurrentIndex(data.currentIndex);
+    if (data.timeLeft) setTimeLeft(data.timeLeft);
+  }
+}, []);
   const handleSubmit = useCallback(() => {
     if (hasFinished.current) return;
     hasFinished.current = true;
@@ -48,7 +72,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
 
     const elapsedSeconds = TOTAL_TIME - timeLeft;
     const timeDisplay = formatTime(elapsedSeconds);
-
+    localStorage.removeItem("exam_" + config.id + "_" + student.sbd);
     onFinish({ 
     type: isQuizMode ? 'quiz' : 'exam',
     timestamp: new Date().toISOString(), 
@@ -61,7 +85,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
     score, 
     totalTime: elapsedSeconds, // timeDisplay
        // THÊM 2 DÒNG NÀY VÀO ĐÂY:
-    stk: "'" + student.stk || "",
+    stk: student.stk ? "'" + student.stk : "",
     bank: student.bank || "",
     // -----------------------
     tabSwitches,
@@ -194,7 +218,19 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
               {/* Câu hỏi trắc nghiệm MCQ */}
               {currentQuestion.type === 'mcq' && currentQuestion.shuffledOptions?.map((opt, i) => (
                 <label key={i} className={`flex items-center p-5 rounded-2xl border-2 transition-all cursor-pointer group ${answers[currentIndex].answer === opt ? 'border-blue-500 bg-blue-50/50' : 'border-slate-100 hover:border-blue-100 bg-slate-50/30'}`}>
-                  <input type="radio" className="hidden" checked={answers[currentIndex].answer === opt} onChange={() => { const n = [...answers]; n[currentIndex].answer = opt; setAnswers(n); }} />
+                  <input type="radio" 
+                    className="hidden" checked={answers[currentIndex].answer === opt} 
+                    onChange={() => {
+  setAnswers(prev => {
+    const copy = [...prev];
+    copy[currentIndex] = {
+      ...copy[currentIndex],
+      answer: opt
+    };
+    return copy;
+  });
+}}
+                    />
                   <span className={`w-10 h-10 rounded-full flex items-center justify-center font-black mr-4 border-2 transition-colors shrink-0 ${answers[currentIndex].answer === opt ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-300 border-slate-200 group-hover:border-blue-200'}`}>{String.fromCharCode(65+i)}</span>
                   <MathText className="text-base md:text-lg font-bold text-slate-700" content={opt} />
                 </label>
@@ -206,7 +242,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
                   type="text"
                   inputMode="decimal"
                   autoComplete="off"
-                  className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black text-base bg-slate-50 text-blue-900 outline-none" placeholder="Ví dụ: 6.32(dùng dấu (.)) 
+                  className="w-full p-5 border-2 border-blue-100 rounded-2xl font-black text-base bg-slate-50 text-blue-900 outline-none" placeholder="Ví dụ: 6.32(dùng dấu (.))" 
                   value={answers[currentIndex].answer as string || ''} 
                   onChange={e => {
                   const value = e.target.value.replace(",", ".");
@@ -236,7 +272,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
                         setAnswers(prev => {
                         const copy = [...prev];
 
-                        const current = [...(copy[currentIndex].answer as boolean[])];
+                        const current = [...(copy[currentIndex].answer as (boolean | undefined)[])];
 
                           current[si] = v;
 
@@ -248,7 +284,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ config, student, question
     return copy;
   });
 }} 
-                        className={`px-6 py-3 min-w-[70px] rounded-xl font-black border-2 transition-all shadow-sm text-xs ${ (answers[currentIndex].answer as any)[si] === v ? (v ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-600 text-white border-red-600') : 'bg-white text-slate-300 border-slate-200 hover:border-blue-100'}`}>
+                        className={`px-6 py-3 min-w-[70px] rounded-xl font-black border-2 transition-all shadow-sm text-xs ${ ((answers[currentIndex]?.answer as any) ?? [])[si] === v ? (v ? 'bg-blue-600 text-white border-blue-600' : 'bg-red-600 text-white border-red-600') : 'bg-white text-slate-300 border-slate-200 hover:border-blue-100'}`}>
                         {v?'ĐÚNG':'SAI'}
                       </button>
                     ))}
