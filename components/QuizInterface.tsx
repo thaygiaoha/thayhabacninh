@@ -22,7 +22,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
     useExamSecurity({
   forceFullscreen: true,
   blockCopy: true,
-  blockDevTools: true
+  blockDevTools: true,
+
+  studentId: student.sbd,
+
+  maxViolations: 3,
+
+  onAutoSubmit: () => {
+    alert("Hệ thống phát hiện gian lận nhiều lần. Bài thi sẽ được nộp tự động!");
+    handleSubmit();
+  }
 });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>(
