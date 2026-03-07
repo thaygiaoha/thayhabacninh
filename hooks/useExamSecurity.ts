@@ -5,7 +5,7 @@ interface SecurityOptions {
   blockCopy?: boolean;
   blockDevTools?: boolean;
   maxViolations?: number;
-  onAutoSubmit?: () => void;   // callback nộp bài
+  onAutoSubmit?: () => void;
   studentId?: string;
 }
 
@@ -19,6 +19,8 @@ export default function useExamSecurity({
 }: SecurityOptions = {}) {
 
   const violations = useRef(0);
+  const devtoolsOpened = useRef(false);
+  const alertLock = useRef(false);
 
   const logViolation = async (type: string) => {
     try {
@@ -38,6 +40,13 @@ export default function useExamSecurity({
 
   const handleViolation = (msg: string, type: string) => {
 
+    if (alertLock.current) return;
+    alertLock.current = true;
+
+    setTimeout(() => {
+      alertLock.current = false;
+    }, 1500);
+
     violations.current++;
 
     logViolation(type);
@@ -48,7 +57,7 @@ export default function useExamSecurity({
 
       alert("Bạn đã vi phạm quá số lần cho phép. Hệ thống sẽ tự nộp bài.");
 
-      if (onAutoSubmit) onAutoSubmit();
+      onAutoSubmit?.();
     }
 
   };
@@ -122,7 +131,7 @@ export default function useExamSecurity({
 
 
   /* =========================
-     CHỐNG DEVTOOLS
+     CHỐNG DEVTOOLS KEY
   ========================= */
 
   useEffect(() => {
@@ -163,11 +172,23 @@ export default function useExamSecurity({
 
       const threshold = 160;
 
-      if (
+      const opened =
         window.outerWidth - window.innerWidth > threshold ||
-        window.outerHeight - window.innerHeight > threshold
-      ) {
-        handleViolation("Phát hiện DevTools!", "devtools_open");
+        window.outerHeight - window.innerHeight > threshold;
+
+      if (opened && !devtoolsOpened.current) {
+
+        devtoolsOpened.current = true;
+
+        handleViolation(
+          "Phát hiện DevTools!",
+          "devtools_open"
+        );
+
+      }
+
+      if (!opened) {
+        devtoolsOpened.current = false;
       }
 
     };
@@ -179,8 +200,8 @@ export default function useExamSecurity({
   }, []);
 
 
-    /* =========================
-     CHỐNG CHỤP MÀN HÌNH (một phần)
+  /* =========================
+     CHỐNG CHỤP MÀN HÌNH
   ========================= */
 
   useEffect(() => {
@@ -204,6 +225,30 @@ export default function useExamSecurity({
 
     return () => {
       document.removeEventListener("keyup", detectPrintScreen);
+    };
+
+  }, []);
+
+
+  /* =========================
+     PHÁT HIỆN ALT+TAB / RỜI CỬA SỔ
+  ========================= */
+
+  useEffect(() => {
+
+    const blurHandler = () => {
+
+      handleViolation(
+        "Bạn vừa rời khỏi cửa sổ bài thi!",
+        "window_blur"
+      );
+
+    };
+
+    window.addEventListener("blur", blurHandler);
+
+    return () => {
+      window.removeEventListener("blur", blurHandler);
     };
 
   }, []);
