@@ -140,10 +140,14 @@ useEffect(() => {
   }, [config.id, config.time, handleSubmit]);
 
   const isAnswered = (idx: number) => {
-    const ans = answers[idx].answer;
-    if (questions[idx].type === 'true-false') return (ans as any[]).some(v => v !== undefined);
-    return ans !== null && ans !== "";
-  };
+  const ans = answers[idx].answer;
+
+  if (questions[idx].type === "true-false") {
+    return (ans as any[]).every(v => v !== undefined);
+  }
+
+  return ans !== null && ans !== "";
+};
 
   const getQuestionStyle = (idx: number) => {
     const answered = isAnswered(idx);
