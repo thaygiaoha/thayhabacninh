@@ -74,7 +74,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
   [selectedCode, allAvailableCodes]);
 
   const combinedTopics = useMemo(() => {
-    const relatedGrades = getRelatedGrades(grade);
+  const relatedGrades = getRelatedGrades(grade).reverse();
     let topics: { id: string; name: string; grade: string }[] = [];
     relatedGrades.forEach(g => {
       const gradeTopics = TOPICS_DATA[g] || [];
