@@ -168,8 +168,8 @@ useEffect(() => {
     if (p.includes("PHẦN I"))
   return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
 
-if (p.includes("PHẦN II"))
-  return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200";
+ if (part.includes("PHẦN II"))
+    return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200";
 
 if (p.includes("PHẦN III"))
   return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
