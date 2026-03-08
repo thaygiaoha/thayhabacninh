@@ -161,20 +161,24 @@ useEffect(() => {
   return ans !== null && ans !== "";
 };
   const getQuestionStyle = (idx: number) => {
-    const answered = isAnswered(idx);
-    if (answered) return "bg-blue-800 text-white border-blue-900 shadow-md";
-    const q = questions[idx];
-    const p = q.part.toUpperCase();
-    if (p.includes("PHẦN I"))
-  return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
+  const answered = isAnswered(idx);
+  const q = questions[idx];
+  const type = q.type.toLowerCase();
 
- if (part.includes("PHẦN II"))
-    return "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200";
+  if (answered)
+    return "bg-blue-700 text-white border-blue-800 shadow-md";
 
-if (p.includes("PHẦN III"))
-  return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
-    return "bg-slate-100 text-slate-500 border-slate-200";
-  };
+  // PHẦN II (True/False)
+  if (q.type === "true-false" || q.type === "tf")
+    return "bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200";
+
+  // PHẦN III (short answer)
+  if (q.type === "short-answer" || q.type === "sa")
+    return "bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-200";
+
+  // PHẦN I (mcq)
+  return "bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200";
+};
 
  const currentQuestion = useMemo(
   () => questions[currentIndex],
