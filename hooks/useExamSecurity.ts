@@ -18,9 +18,19 @@ export default function useExamSecurity({
   studentId
 }: SecurityOptions = {}) {
 
+  const lastType = useRef<string | null>(null);
+  const startTime = useRef(Date.now());
   const violations = useRef(0);
   const devtoolsOpened = useRef(false);
   const alertLock = useRef(false);
+
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  /* =========================
+     LOG SERVER
+  ========================= */
 
   const logViolation = async (type: string) => {
     try {
@@ -32,13 +42,26 @@ export default function useExamSecurity({
         body: JSON.stringify({
           studentId,
           type,
-          time: new Date().toISOString()
+          time: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          width: window.innerWidth,
+          height: window.innerHeight
         })
       });
     } catch {}
   };
 
+  /* =========================
+     HANDLE VIOLATION
+  ========================= */
+
   const handleViolation = (msg: string, type: string) => {
+
+    if (lastType.current === type) return;
+    lastType.current = type;
+    setTimeout(() => (lastType.current = null), 1000);
+
+    if (Date.now() - startTime.current < 3000) return;
 
     if (alertLock.current) return;
     alertLock.current = true;
@@ -54,12 +77,9 @@ export default function useExamSecurity({
     alert(`${msg}\nVi phạm ${violations.current}/${maxViolations}`);
 
     if (violations.current >= maxViolations) {
-
       alert("Bạn đã vi phạm quá số lần cho phép. Hệ thống sẽ tự nộp bài.");
-
       onAutoSubmit?.();
     }
-
   };
 
   /* =========================
@@ -71,38 +91,56 @@ export default function useExamSecurity({
     if (!forceFullscreen) return;
 
     const requestFull = () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(()=>{});
+
+      if (document.fullscreenElement) return;
+
+      const el: any = document.documentElement;
+
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(()=>{});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
       }
+
     };
 
-   const start = () => {
-  requestFull();
-  document.removeEventListener("click", start);
-  document.removeEventListener("keydown", start);
-};
+    const start = () => {
+      requestFull();
+      document.removeEventListener("click", start);
+      document.removeEventListener("keydown", start);
+    };
 
-document.addEventListener("click", start);
-document.addEventListener("keydown", start);
-    const exitHandler = () => {
+    document.addEventListener("click", start);
+    document.addEventListener("keydown", start);
+
+    const fsHandler = () => {
+
+      if (document.hidden) return;
+
       if (!document.fullscreenElement) {
+
         handleViolation(
           "Không được thoát toàn màn hình khi đang làm bài!",
           "exit_fullscreen"
         );
+
         requestFull();
+
       }
+
     };
 
-    document.addEventListener("fullscreenchange", exitHandler);
+    document.addEventListener("fullscreenchange", fsHandler);
+    document.addEventListener("webkitfullscreenchange", fsHandler as any);
 
     return () => {
       document.removeEventListener("click", start);
-      document.removeEventListener("fullscreenchange", exitHandler);
+      document.removeEventListener("keydown", start);
+      document.removeEventListener("fullscreenchange", fsHandler);
+      document.removeEventListener("webkitfullscreenchange", fsHandler as any);
     };
 
   }, []);
-
 
   /* =========================
      CHỐNG COPY
@@ -110,7 +148,7 @@ document.addEventListener("keydown", start);
 
   useEffect(() => {
 
-    if (!blockCopy) return;
+    if (!blockCopy || isMobile) return;
 
     const prevent = (e: Event) => e.preventDefault();
 
@@ -126,10 +164,10 @@ document.addEventListener("keydown", start);
       document.removeEventListener("cut", prevent);
       document.removeEventListener("contextmenu", prevent);
       document.removeEventListener("selectstart", prevent);
+      document.body.style.userSelect = "";
     };
 
   }, []);
-
 
   /* =========================
      CHỐNG DEVTOOLS KEY
@@ -137,7 +175,7 @@ document.addEventListener("keydown", start);
 
   useEffect(() => {
 
-    if (!blockDevTools) return;
+    if (!blockDevTools || isMobile) return;
 
     const keyHandler = (e: KeyboardEvent) => {
 
@@ -160,18 +198,17 @@ document.addEventListener("keydown", start);
 
   }, []);
 
-
   /* =========================
      PHÁT HIỆN DEVTOOLS
   ========================= */
 
   useEffect(() => {
 
-    if (!blockDevTools) return;
+    if (!blockDevTools || isMobile) return;
 
     const detect = () => {
 
-      const threshold = 160;
+      const threshold = 200;
 
       const opened =
         window.outerWidth - window.innerWidth > threshold ||
@@ -188,9 +225,7 @@ document.addEventListener("keydown", start);
 
       }
 
-      if (!opened) {
-        devtoolsOpened.current = false;
-      }
+      if (!opened) devtoolsOpened.current = false;
 
     };
 
@@ -200,18 +235,21 @@ document.addEventListener("keydown", start);
 
   }, []);
 
-
   /* =========================
-     CHỐNG CHỤP MÀN HÌNH
+     CHỐNG SCREENSHOT
   ========================= */
 
   useEffect(() => {
+
+    if (isMobile) return;
 
     const detectPrintScreen = (e: KeyboardEvent) => {
 
       if (e.key === "PrintScreen") {
 
-        navigator.clipboard.writeText("Screenshot blocked");
+        try {
+          navigator.clipboard.writeText("");
+        } catch {}
 
         handleViolation(
           "Không được chụp màn hình bài thi!",
@@ -230,27 +268,55 @@ document.addEventListener("keydown", start);
 
   }, []);
 
-
   /* =========================
-     PHÁT HIỆN ALT+TAB / RỜI CỬA SỔ
+     PHÁT HIỆN RỜI TAB
   ========================= */
 
   useEffect(() => {
 
-    const blurHandler = () => {
+    const visibilityHandler = () => {
 
-      handleViolation(
-        "Bạn vừa rời khỏi cửa sổ bài thi!",
-        "window_blur"
-      );
+      if (document.hidden) {
+
+        handleViolation(
+          "Bạn vừa rời khỏi cửa sổ bài thi!",
+          "tab_hidden"
+        );
+
+      }
 
     };
 
-    window.addEventListener("blur", blurHandler);
+    document.addEventListener("visibilitychange", visibilityHandler);
 
     return () => {
-      window.removeEventListener("blur", blurHandler);
+      document.removeEventListener("visibilitychange", visibilityHandler);
     };
+
+  }, []);
+
+  /* =========================
+     PHÁT HIỆN NHIỀU MÀN HÌNH
+  ========================= */
+
+  useEffect(() => {
+
+    if (isMobile) return;
+
+    const interval = setInterval(() => {
+
+      if (window.screen.availWidth > window.innerWidth + 200) {
+
+        handleViolation(
+          "Phát hiện nhiều màn hình!",
+          "dual_screen"
+        );
+
+      }
+
+    }, 4000);
+
+    return () => clearInterval(interval);
 
   }, []);
 
