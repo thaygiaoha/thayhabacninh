@@ -8,23 +8,6 @@ interface ExamPortalProps {
   onBack: () => void;
   onStart: (config: any, student: Student, examQuestions: Question[]) => void;
 }
-  const getSubjectFromPass = (pass) => {
-  const p = String(pass || "").toUpperCase();
-  
-  if (p.startsWith('TO')) return { id: 'toan', name: 'Toán học', color: 'bg-blue-100 text-blue-700 border-blue-200' };
-  if (p.startsWith('LY')) return { id: 'ly', name: 'Vật lý', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' };
-  if (p.startsWith('HO')) return { id: 'hoa', name: 'Hóa học', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
-  if (p.startsWith('SI')) return { id: 'sinh', name: 'Sinh học', color: 'bg-purple-100 text-purple-700 border-purple-200' };
-  if (p.startsWith('TA')) return { id: 'anh', name: 'T.Anh', color: 'bg-blue-100 text-blue-700 border-blue-200' }; 
-  if (p.startsWith('SU')) return { id: 'su', name: 'Lịch sử', color: 'bg-green-100 text-green-700 border-green-200' };  
-  if (p.startsWith('DI')) return { id: 'dia', name: 'Địa lý', color: 'bg-green-100 text-green-700 border-green-200' }; 
-  if (p.startsWith('KT')) return { id: 'ktpl', name: 'KTPL', color: 'bg-green-100 text-green-700 border-green-200' }; 
-  if (p.startsWith('CN')) return { id: 'cn', name: 'CNCN', color: 'bg-green-100 text-green-700 border-green-200' };  
-  if (p.startsWith('NN')) return { id: 'nn', name: 'CNNN', color: 'bg-green-100 text-green-700 border-green-200' };  
-  if (p.startsWith('TT')) return { id: 'chung', name: 'Chung', color: 'bg-green-100 text-green-700 border-green-200' };  
-  
-  return { id: 'unknown', name: 'Hệ thống', color: 'bg-slate-100 text-slate-700 border-slate-200' };
-};
 
 const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStart }) => {
   // 1. Đồng bộ hóa Grade ngay từ đầu
@@ -33,8 +16,6 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
   // 2. States
   const [selectedCode, setSelectedCode] = useState<string>("");
   const [idInput, setIdInput] = useState("");
-  const [monInput, setMonInput] = useState("");
-  const [authPass, setAuthPass] = useState("");
   const [sbdInput, setSbdInput] = useState("");
   const [verifiedStudent, setVerifiedStudent] = useState<Student | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -108,11 +89,9 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
 
   // 6. Handlers
   const handleVerify = async () => {
-    if (!idInput || !sbdInput || !monInput) return alert("Vui lòng nhập đủ ID Giáo viên và SBD! và Môn thi");
+    if (!idInput || !sbdInput) return alert("Vui lòng nhập đủ ID Giáo viên và SBD!");
     setIsVerifying(true);
     try {
-      // const monId = getSubjectFromPass(authPass).id;
-      // const url = `${DANHGIA_URL}?action=getQuestionById&id=${editForm.idquestion}&mon=${monId}`;
       const targetUrl = API_ROUTING[idInput.trim()] || DEFAULT_API_URL;
       const url = new URL(targetUrl);
       url.searchParams.append("type", "verifyStudent");
@@ -186,7 +165,6 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
         <div className="space-y-6">
           <h3 className="text-xl font-black border-l-8 border-blue-600 pl-4 uppercase">Thí sinh</h3>
           <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4">
-            <input type="text" placeholder="CHỌN MÔN" className="w-full p-4 rounded-xl border font-black uppercase" value={monInput} onChange={e => setMonInput(e.target.value)} />
             <input type="text" placeholder="ID GIÁO VIÊN" className="w-full p-4 rounded-xl border font-black uppercase" value={idInput} onChange={e => setIdInput(e.target.value)} />
             <input type="text" placeholder="SỐ BÁO DANH" className="w-full p-4 rounded-xl border font-black uppercase" value={sbdInput} onChange={e => setSbdInput(e.target.value)} />
             <button onClick={handleVerify} disabled={isVerifying} className="w-full py-4 bg-blue-700 text-white rounded-xl font-black shadow-lg">
