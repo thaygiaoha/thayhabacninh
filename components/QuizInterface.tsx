@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ExamConfig, Question, UserAnswer, ExamResult, Student } from '../types';
-import useExamSecurity from "../hooks/useExamSecurity";
 import MathText from './MathText';
 
 interface QuizInterfaceProps {
@@ -22,17 +21,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   const studentInfo = {
   sbd: "anonymous"
 };
-useExamSecurity({
-  forceFullscreen: true,
-  blockCopy: true,
-  blockDevTools: true,
-  studentId: studentInfo?.sbd,
-  maxViolations: 4,
-  onAutoSubmit: () => {
-    alert("Phát hiện vi phạm nhiều lần. Hệ thống sẽ tự nộp bài!");
-    handleFinish(true);
-  }
-});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>(
   questions.map(q => ({ 
