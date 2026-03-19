@@ -10,7 +10,7 @@ interface ExamPortalProps {
 }
 
 const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStart }) => {
-  // 1. Đồng bộ hóa Grade ngay từ đầu
+  // 1. Đồng bộ hóa Grade ngay từ đầu chạy luôn
   const grade = useMemo(() => rawGrade.toString(), [rawGrade]);
 
   // 2. States
