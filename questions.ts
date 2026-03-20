@@ -103,7 +103,7 @@ export const pickQuestionsSmart = (
       const p4 = typePool.filter(q => q.classTag.toString().endsWith(".d"));
       const p3 = typePool.filter(q => q.classTag.toString().endsWith(".c"));
       const pOther = typePool.filter(q => 
-        !q.classTag.toString().endsWith(".a") && 
+        !q.classTag.toString().endsWith(".c") && 
         !q.classTag.toString().endsWith(".d")
       );
 
