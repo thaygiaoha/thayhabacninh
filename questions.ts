@@ -93,7 +93,7 @@ export const pickQuestionsSmart = (
     // LỌC THÔNG MINH: Chấp nhận cả "1001" và "1001.3"
     const pool = questionsBank.filter(q => {
       const tag = q.classTag.toString();
-      return tag === tidStr || tag.startsWith(tidStr + ".");
+      return tag === tidStr || tag.slice(2).startsWith(tidStr + ".");
     });
     
     const getSub = (type: string, l3: number, l4: number, total: number) => {
