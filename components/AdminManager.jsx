@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DANHGIA_URL } from '../config';
+import { DANHGIA_URL, API_ROUTING } from '../config';
 import { questionsBank } from '../questions'; // Hoặc đường dẫn file questions của thầy
 
 const AdminPanel = ({ mode, onBack }) => {
@@ -27,7 +27,7 @@ const normalizeText = (text) => {
   // Hàm này sẽ chạy ngay khi thầy mở trang Admin
   const loadConfig = async () => {
     try {
-      const response = await fetch(`${DANHGIA_URL}?action=getAppConfig`, {
+      const response = await fetch(`${API_ROUTING[admin1]}?action=getAppConfig`, {
         method: 'GET',
         redirect: 'follow' // Bắt buộc phải có để tránh lỗi CORS
       });
@@ -42,7 +42,7 @@ const normalizeText = (text) => {
   };
 
   loadConfig();
-}, []); // Dấu ngoặc vuông này đảm bảo nó chỉ chạy 1 lần duy nhất khi load trang 
+}, [API_ROUTING[admin1]]); // Dấu ngoặc vuông này đảm bảo nó chỉ chạy 1 lần duy nhất khi load trang 
 
   const [editForm, setEditForm] = useState({ 
     idquestion: '', classTag: '', question: '', phuongan: '', dadung: '', loigiai: '' 
