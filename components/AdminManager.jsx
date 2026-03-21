@@ -42,7 +42,7 @@ const normalizeText = (text) => {
   };
 
   loadConfig();
-}, [API_ROUTING[admin1]]); // Dấu ngoặc vuông này đảm bảo nó chỉ chạy 1 lần duy nhất khi load trang 
+}, []); // Dấu ngoặc vuông này đảm bảo nó chỉ chạy 1 lần duy nhất khi load trang 
 
   const [editForm, setEditForm] = useState({ 
     idquestion: '', classTag: '', question: '', phuongan: '', dadung: '', loigiai: '' 
