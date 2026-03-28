@@ -4,7 +4,7 @@
 const SPREADSHEET_ID = "16w4EzHhTyS1CnTfJOWE7QQNM0o2mMQIqePpPK8TEYrg";
 const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-const ADMIN_RESET_PASSWORD = "6688@";
+const ADMIN_RESET_PASSWORD = "H1111@";
 
 /*************************************************
  * HÀM TIỆN ÍCH: TẠO RESPONSE JSON
@@ -66,6 +66,46 @@ function doGet(e) {
   const params = e.parameter;
   const type = params.type;
   const action = params.action;
+  // load ngân hàng đề
+  if (action === 'loadQuestions') {
+
+  var values = sheetNH.getDataRange().getValues();
+  if (values.length <= 1) {
+    return createResponse("success", "Không có dữ liệu", []);
+  }
+
+  var headers = values[0];
+  var rows = values.slice(1);
+
+  var result = rows.map(function(r) {
+
+    var obj = {
+      id: r[0],
+      classTag: r[1],
+      type: r[2],
+      part: r[3],
+      question: r[4]
+    };
+
+    if (r[2] === "mcq") {
+      obj.o = r[5] ? JSON.parse(r[5]) : [];
+      obj.a = r[6];
+    }
+
+    if (r[2] === "true-false") {
+      obj.s = r[5] ? JSON.parse(r[5]) : [];
+    }
+
+    if (r[2] === "short-answer") {
+      obj.a = r[6];
+    }
+
+    return obj;
+  });
+
+  return createResponse("success", "Load thành công", result);
+}
+
 
   // Reset QuiZ
   if (action === "resetQuiz") {
@@ -99,7 +139,6 @@ function doGet(e) {
     }
   }
   
-  
   if (action === 'getLG') {
      const sheetNH = ss.getSheetByName("nganhang");
     var idTraCuu = params.id;
@@ -109,7 +148,7 @@ function doGet(e) {
     
     for (var i = 1; i < data.length; i++) {
       if (data[i][0].toString().trim() === idTraCuu.toString().trim()) {
-        var loigiai = data[i][4] || ""; 
+        var loigiai = data[i][7] || ""; 
         
         // Ép kiểu về String để đảm bảo không bị lỗi tệp
         return ContentService.createTextOutput(String(loigiai))
@@ -118,6 +157,24 @@ function doGet(e) {
     }
     return ContentService.createTextOutput("Không tìm thấy ID này!").setMimeType(ContentService.MimeType.TEXT);
   }
+   if (action === 'updateLG') {
+    const sheetNH = ss.getSheetByName("nganhang");
+  var data = JSON.parse(e.postData.contents);
+  var id = data.id;
+  var lg = data.loigiai;
+
+  var values = sheetNH.getDataRange().getValues();
+
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][0] == id) {
+      sheetNH.getRange(i + 1, 8).setValue(lg); // cột loigiai
+      break;
+    }
+  }
+
+  return createResponse("success", "Đã cập nhật lời giải!");
+}
+
 
 
    // lấy dạng câu hỏi
@@ -216,10 +273,9 @@ if (action === "getRouting") {
     return createResponse("success", "OK", stats);
   }
 
-  // 5. LẤY MẬT KHẨU (Ô H2)
-  if (type === 'getPass') {
-    const sheetList = ss.getSheetByName("danhsach");
-    const password = sheetList.getRange("H2").getValue();
+  // 5. LẤY MẬT KHẨU QUIZ
+  if (type === 'getPass') {    
+    const password = ADMIN_RESET_PASSWORD;
     return resJSON({ password: password.toString() });
   }
 
@@ -230,7 +286,7 @@ if (action === "getRouting") {
     const sheet = ss.getSheetByName("danhsach");
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
-      if (data[i][5].toString().trim() === idNumber.trim() && data[i][0].toString().trim() === sbd.trim()) {
+      if (data[1][5].toString().trim() === idNumber.trim() && data[i][0].toString().trim() === sbd.trim()) {
         return createResponse("success", "OK", {
           name: data[i][1], class: data[i][2], limit: data[i][3],
           limittab: data[i][4], taikhoanapp: data[i][6], idnumber: idNumber, sbd: sbd
@@ -250,9 +306,13 @@ if (action === "getRouting") {
         return createResponse("success", "OK", {
           idquestion: dataNH[i][0], 
           classTag: dataNH[i][1], 
-          question: dataNH[i][2],
-          datetime: dataNH[i][3], 
-          loigiai: dataNH[i][4]
+          type: dataNH[i][2],
+          question: dataNH[i][4],
+          options: dataNH[i][5],
+          answer: dataNH[i][6],
+          loigiai: dataNH[i][7],
+          datetime: dataNH[i][8]
+          
         });
       }
     }
@@ -286,24 +346,49 @@ if (action === "getRouting") {
 
   // 9. LẤY TẤT CẢ CÂU HỎI (Hàm này thầy bị trùng, em gom lại bản chuẩn nhất)
   if (action === "getQuestions") {
-    var sheet = ss.getSheetByName("nganhang");
-    var rows = sheet.getDataRange().getValues();
-    var questions = [];
-    for (var i = 1; i < rows.length; i++) {
-      var raw = rows[i][2];
-      if (!raw) continue;
-      try {
-        var jsonText = raw.replace(/(\w+)\s*:/g, '"$1":').replace(/'/g, '"');
-        var obj = JSON.parse(jsonText);
-        if (!obj.classTag) obj.classTag = rows[i][1];
-        obj.loigiai = rows[i][4] || "";
-        questions.push(obj);
-      } catch (e) {}
+  var sheet = ss.getSheetByName("nganhang");
+  var rows = sheet.getDataRange().getValues();
+  var questions = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    if (!rows[i][0]) continue;
+
+    var parsedOptions = null;
+    try {
+      parsedOptions = rows[i][5] ? JSON.parse(rows[i][5]) : null;
+    } catch(e) {
+      parsedOptions = null;
     }
-    return createResponse("success", "OK", questions);
+
+    var qObj = {
+      id: rows[i][0],
+      classTag: rows[i][1] || "",
+      type: rows[i][2] || "",
+      part: rows[i][3] || "",
+      question: rows[i][4] || "",
+      a: rows[i][6] || "",
+      loigiai: rows[i][7] || ""
+    };
+
+    if (qObj.type === "mcq") {
+      qObj.o = parsedOptions;
+    }
+
+    if (qObj.type === "true-false") {
+      qObj.s = parsedOptions;
+    }
+
+    if (qObj.type === "short-answer") {
+      // không cần options
+    }
+
+    questions.push(qObj);
   }
 
-  return createResponse("error", "Yêu cầu không hợp lệ");
+  return createResponse("success", "OK", questions);
+}
+
+  return createResponse("error", "Có gì đó sai sai rồi bạn hiền! Liên hệ: 0988.948.882");
 }
 
 /*************************************************
@@ -442,25 +527,32 @@ if (action === "getRouting") {
 
     // 3. NHÁNH LƯU CÂU HỎI MỚI (saveQuestions)
     if (action === 'saveQuestions') {
-      var now = new Date();
-      var yymmdd = now.getFullYear().toString().slice(-2) + ("0" + (now.getMonth() + 1)).slice(-2) + ("0" + now.getDate()).slice(-2);
-      var tttStart = 1;
-      if (sheetNH.getLastRow() > 1) {
-        var lastId = sheetNH.getRange(sheetNH.getLastRow(), 1).getValue().toString();
-        if (lastId.length >= 3) {
-          var lastNum = parseInt(lastId.slice(-3), 10);
-          if (!isNaN(lastNum)) tttStart = lastNum + 1;
-        }
-      }
-      for (var i = 0; i < data.length; i++) {
-        var item = data[i];
-        var xy = (item.classTag || "XX").toString().slice(0, 2);
-        var newId = xy + yymmdd + (tttStart + i).toString().padStart(3, '0');
-        var fixedQuestion = item.question ? item.question.replace(/id\s*:\s*\d+/, "id: " + newId) : "";
-        sheetNH.appendRow([newId, item.classTag, fixedQuestion, new Date(), item.lg || ""]);
-      }
-      return createResponse("success", "Đã lưu " + data.length + " câu hỏi thành công!");
-    }
+
+  var now = new Date();  
+
+  var startRow = sheetNH.getLastRow() + 1;
+
+  var rows = data.map(function(item) {
+    return [
+      item.id,
+      item.classTag,
+      item.type,
+      item.part,
+      item.question,
+      item.options || "",
+      item.answer || "",
+      item.loigiai || "",
+      now
+    ];
+  });
+
+  if (rows.length > 0) {
+    sheetNH.getRange(startRow, 1, rows.length, rows[0].length)
+      .setValues(rows);
+  }
+
+  return createResponse("success", "Đã lưu " + rows.length + " câu hỏi thành công!");
+}
 
     // 4. XÁC MINH GIÁO VIÊN (verifyGV)
     if (action === "verifyGV") {
@@ -492,8 +584,7 @@ if (action === "getRouting") {
 
     // 6. XÁC MINH ADMIN (verifyAdmin)
     if (action === "verifyAdmin") {
-      var adminPass = ss.getSheetByName("danhsach").getRange("I2").getValue().toString().trim();
-      if (data.password.toString().trim() === adminPass) return resJSON({ status: "success", message: "Chào Admin!" });
+           if (data.password.toString().trim() === ADMIN_RESET_PASSWORD) return resJSON({ status: "success", message: "Chào Admin!" });
       return resJSON({ status: "error", message: "Sai mật khẩu!" });
     }
 
@@ -524,10 +615,10 @@ if (action === "getRouting") {
       sheetResult.appendRow([new Date(), data.examCode, data.sbd, data.name, data.className, data.score, data.totalTime, JSON.stringify(data.details)]);
       return createResponse("success", "Đã lưu kết quả thi");
     }
-
     return createResponse("error", "Không khớp lệnh nào!");
 
-  } catch (err) {
+  }
+  catch (err) {
     return createResponse("error", err.toString());
   } finally {
     lock.releaseLock();
