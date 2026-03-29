@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Question, Student, ExamCodeDefinition } from '../types';
-import { API_ROUTING, DEFAULT_API_URL, TOPICS_DATA, EXAM_CODES } from '../config';
+import { KETQUA_URL, DANHGIA_URL, TOPICS_DATA, EXAM_CODES } from '../config';
 import { pickQuestionsSmart } from '../questions';
 
 
@@ -74,7 +74,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade, onBack, onStart }) => {
     if (!idInput || !sbdInput) return alert("Vui lòng nhập đầy đủ ID Giáo viên và Số báo danh!");
     setIsVerifying(true);
     setVerifiedStudent(null);
-    const targetUrl = API_ROUTING[idInput.trim()] || DEFAULT_API_URL;
+    const targetUrl = DANHGIA_URL;
     try {
       const url = new URL(targetUrl);
       url.searchParams.append("type", "verifyStudent");
