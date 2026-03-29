@@ -98,6 +98,7 @@ useEffect(() => {
     phoneNumber: "'" + student.phoneNumber,   
     score, 
     totalTime: elapsedSeconds, // timeDisplay
+    idgv: student.idgv,
        // THÊM 2 DÒNG NÀY VÀO ĐÂY:
     stk: student.stk ? "'" + student.stk : "",
     bank: student.bank || "",
