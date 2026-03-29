@@ -87,6 +87,10 @@ useEffect(() => {
     const elapsedSeconds = TOTAL_TIME - timeLeft;
     const timeDisplay = formatTime(elapsedSeconds);
     localStorage.removeItem("exam_" + config.id + "_" + student.sbd);
+    console.log("DATA SUBMIT:", {
+  ...student,
+  idgv: student.idgv
+});
     onFinish({ 
     type: isQuizMode ? 'quiz' : 'exam',
     timestamp: new Date().toISOString(), 
