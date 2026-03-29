@@ -16,7 +16,7 @@ interface ExamPortalProps {
 
 const ExamPortal: React.FC<ExamPortalProps> = ({ grade, onBack, onStart }) => {
   const [selectedCode, setSelectedCode] = useState<string>("");
-  const [idInput, setIdInput] = useState("");
+  const [idgv, setIdgv] = useState("");
   const [sbdInput, setSbdInput] = useState("");
   const [verifiedStudent, setVerifiedStudent] = useState<Student | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -71,14 +71,14 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade, onBack, onStart }) => {
   }, [grade]);
 
   const handleVerify = async () => {
-    if (!idInput || !sbdInput) return alert("Vui lòng nhập đầy đủ ID Giáo viên và Số báo danh!");
+    if (!idgv || !sbdInput) return alert("Vui lòng nhập đầy đủ ID Giáo viên và Số báo danh!");
     setIsVerifying(true);
     setVerifiedStudent(null);
     const targetUrl = DANHGIA_URL;
     try {
       const url = new URL(targetUrl);
       url.searchParams.append("type", "verifyStudent");
-      url.searchParams.append("idnumber", idInput.trim());
+      url.searchParams.append("idnumber", idgv.trim());
       url.searchParams.append("sbd", sbdInput.trim());
       const resp = await fetch(url.toString());
       const result = await resp.json();
@@ -86,7 +86,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade, onBack, onStart }) => {
         setVerifiedStudent(result.data);
         const matrixUrl = new URL(targetUrl);
         matrixUrl.searchParams.append("type", "getExamCodes");
-        matrixUrl.searchParams.append("idnumber", idInput.trim());
+        matrixUrl.searchParams.append("idnumber", idgv.trim());
         const mResp = await fetch(matrixUrl.toString());
         const mResult = await mResp.json();
         if (mResult.status === "success") {
@@ -144,7 +144,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade, onBack, onStart }) => {
     <div className="space-y-3">
       <div className="relative">
         <i className="fas fa-chalkboard-teacher absolute left-4 top-1/2 -translate-y-1/2 text-blue-400"></i>
-        <input type="text" placeholder="ID BẢN QUYỀN" className="w-full p-4 pl-12 bg-white rounded-2xl shadow-sm border border-slate-100 focus:ring-4 focus:ring-blue-100 font-black outline-none uppercase" value={idInput} onChange={e => setIdInput(e.target.value)} />
+        <input type="text" placeholder="ID BẢN QUYỀN" className="w-full p-4 pl-12 bg-white rounded-2xl shadow-sm border border-slate-100 focus:ring-4 focus:ring-blue-100 font-black outline-none uppercase" value={idgv} onChange={e => setIdgv(e.target.value)} />
       </div>
       <div className="relative">
         <i className="fas fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-blue-400"></i>
