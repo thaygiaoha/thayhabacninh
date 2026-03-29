@@ -102,7 +102,10 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
       const result = await resp.json();
       
       if (result.status === "success") {
-        setVerifiedStudent(result.data);
+        setVerifiedStudent({
+          ...result.data,
+        idgv: idInput.trim() // 👈 FIX CHUẨN NHẤT
+          });
         // Tải thêm mã đề riêng của GV nếu có
         const matrixUrl = new URL(targetUrl);
         matrixUrl.searchParams.append("type", "getExamCodes");
