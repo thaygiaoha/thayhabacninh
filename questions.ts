@@ -1,5 +1,5 @@
 import { Question } from './types';
-import { DANHGIA_URL, KETQUA_URL } from './config';
+import { KETQUA_URL } from './config';
 // Lọc câu trùng
 const findDuplicates = (bank) => {
   const groups = [];
