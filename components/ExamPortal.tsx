@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Question, Student, ExamCodeDefinition } from '../types';
-import { API_ROUTING, DEFAULT_API_URL, TOPICS_DATA, EXAM_CODES } from '../config';
+import { KETQUA_URL, API_ROUTING, DEFAULT_API_URL, TOPICS_DATA, EXAM_CODES } from '../config';
 import { pickQuestionsSmart } from '../questions';
 
 interface ExamPortalProps {
@@ -47,7 +47,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
   useEffect(() => {
     const fetchSystemCodes = async () => {
       try {
-        const url = new URL(DEFAULT_API_URL);
+        const url = new URL(KETQUA_URL);
         url.searchParams.append("type", "getExamCodes");
         url.searchParams.append("idnumber", "SYSTEM");
         url.searchParams.append("grade", grade);
@@ -92,7 +92,7 @@ const ExamPortal: React.FC<ExamPortalProps> = ({ grade: rawGrade, onBack, onStar
     if (!idInput || !sbdInput) return alert("Vui lòng nhập đủ ID Giáo viên và SBD!");
     setIsVerifying(true);
     try {
-      const targetUrl = API_ROUTING[idInput.trim()] || DEFAULT_API_URL;
+      const targetUrl = KETQUA_URL;
       const url = new URL(targetUrl);
       url.searchParams.append("type", "verifyStudent");
       url.searchParams.append("idnumber", idInput.trim());
