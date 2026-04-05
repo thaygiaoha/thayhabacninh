@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Question, Student, ExamCodeDefinition } from '../types';
-import { KETQUA_URL, API_ROUTING, DEFAULT_API_URL, TOPICS_DATA, EXAM_CODES } from '../config';
+import { KETQUA_URL, DEFAULT_API_URL, TOPICS_DATA, EXAM_CODES } from '../config';
 import { pickQuestionsSmart } from '../questions';
 
 interface ExamPortalProps {
