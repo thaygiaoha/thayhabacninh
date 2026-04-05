@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DANHGIA_URL, ADMIN_CONFIG, OTHER_APPS, API_ROUTING } from '../config';
+import { DANHGIA_URL, ADMIN_CONFIG, OTHER_APPS, KETQUA_URL } from '../config';
 import { AppUser, Student } from '../types';
 import { postToScript } from '../postToScript';
 
@@ -146,7 +146,7 @@ const handleSaveMatrix = async () => {
   }
 
   // Tự động chọn Link Script dựa trên mã IDGV (8888 hoặc 9999)
-  const targetURL = API_ROUTING[idgv] || DANHGIA_URL;
+  const targetURL = KETQUA_URL;
 
   const payload = {
     gvId: idgv,
