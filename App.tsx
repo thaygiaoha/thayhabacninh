@@ -116,16 +116,37 @@ useEffect(() => {
 
   // Kết thúc bài thi và gửi dữ liệu
   const handleFinishExam = async (result: ExamResult) => {
-    setExamResult(result);
-    setCurrentView('result');
-    let targetUrl = DEFAULT_API_URL;
-    if (result.type === 'quiz') targetUrl = DANHGIA_URL;
-    else if (activeStudent && API_ROUTING[activeStudent.idnumber]) targetUrl = API_ROUTING[activeStudent.idnumber];
+  setExamResult(result);
+  setCurrentView('result');
+  
+  let targetUrl = (result.type === 'quiz') ? DANHGIA_URL : KETQUA_URL;
 
-    try {
-      await fetch(targetUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(result) });
-    } catch (e) { console.error("Lỗi gửi kết quả:", e); }
+  // CHUẨN HÓA DỮ LIỆU TRƯỚC KHI GỬI
+  const payload = {
+    action: "submitExam", // Thêm cái này để GAS nhận diện action
+    timestamp: new Date().toLocaleString('vi-VN'),
+    exams: String(activeExam?.id || result.examCode || "").toUpperCase(),
+    sbd: String(activeStudent?.sbd || ""),
+    name: String(activeStudent?.name || ""),
+    class: String(activeStudent?.class || ""),
+    tongdiem: result.totalScore ?? result.tongdiem ?? 0,
+    time: result.time || 0,
+    idgv: String(activeStudent?.idnumber || ""), 
+    // Gán trực tiếp modeKq ở đây để không bao giờ sai cột I
+    modeKq: String(activeExam?.id || "") + "." + String(activeStudent?.idnumber || "")   
   };
+
+  try {
+    await fetch(targetUrl, { 
+      method: 'POST', 
+      // Bỏ no-cors nếu GAS của thầy đã hỗ trợ, hoặc để 'text/plain'
+      body: JSON.stringify(payload) 
+    });
+    console.log("✅ Gửi kết quả chuẩn thành công!");
+  } catch (e) { 
+    console.error("❌ Lỗi gửi kết quả:", e); 
+  }
+};
 
   const goHome = () => {
     window.location.href = "https://smartedu-vn.vercel.app/";
