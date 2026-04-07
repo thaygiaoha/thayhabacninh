@@ -6,7 +6,7 @@ export let questionsBankW: Question[] = [];
 
 export const fetchQuestionsBankW = async (): Promise<Question[]> => {
   try {
-    const response = await fetch(`${DANHGIA_URL}?action=getQuestions`);
+    const response = await fetch(`${DANHGIA_URL}?action=getQuestionsByCode&examCode=${examCode}`);
     const result = await response.json();
     if (result.status === "success" && Array.isArray(result.data)) {
       questionsBankW = result.data;
