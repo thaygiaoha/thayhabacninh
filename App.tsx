@@ -132,8 +132,7 @@ useEffect(() => {
     tongdiem: result.totalScore ?? result.tongdiem ?? 0,
     time: result.time || 0,
     idgv: String(activeStudent?.idnumber || ""), 
-    // Gán trực tiếp modeKq ở đây để không bao giờ sai cột I
-    modeKq: String(activeExam?.id || "") + "." + String(activeStudent?.idnumber || "")   
+    // Gán trực tiếp modeKq ở đây để không bao giờ sai cột I   
   };
 
   try {
